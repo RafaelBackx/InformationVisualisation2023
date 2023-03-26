@@ -1,0 +1,79 @@
+
+<template>
+  <div>
+    <div id="mapid" class=""></div>
+  </div>
+</template>
+
+<script>
+import * as countries from '../../countries.geo.json'
+import leaflet from "leaflet";
+
+
+export default {
+  components: {
+  },
+  data() {
+    return {
+      zoom: 2,
+      map: undefined,
+      geoJson: undefined,
+    }
+  },
+  mounted(){
+
+    this.map = leaflet.map("mapid", {
+      maxBounds: [[-90,-180],   [90,180]],
+      maxBoundsViscosity: 1.0,
+      minZoom: 1,
+      maxZoom: 5,
+      bounceAtZoomLimits: true
+    }).setView([42.5145, -83.0147], 9)
+
+    leaflet.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+      maxZoom: 8,
+    }).addTo(this.map)
+    this.geojson = leaflet.geoJson(countries,{
+      onEachFeature: this.mapEventHandler
+    }).addTo(this.map)
+  },
+  methods: {
+    mapEventHandler(feature, layer){
+      layer.on({
+        mouseover: this.mapOnMouseOver,
+        mouseout: this.mapOnMouseOut,
+        click: this.mapOnClick
+      })
+    },
+    mapOnMouseOver(event){
+      let layer = event.target;
+      layer.setStyle({
+        weight: 5,
+        color: '#666',
+        dashArray: '',
+        fillOpacity: 0.7
+      })
+      layer.bringToFront()
+    },
+    mapOnMouseOut(event){
+      this.geojson.resetStyle(event.target)
+    },
+    mapOnClick(event){
+      this.map.fitBounds(event.target.getBounds())
+      let country_iso = event.target.feature.id
+      let country_name = event.target.feature.properties.name
+      console.log(`${country_name} - ${country_iso}`)
+      this.$emit("changeCountry",[country_name,country_iso])
+    }
+  }
+}
+
+</script>
+
+<style scoped>
+#mapid{
+  width: 50vw;
+  height: 50vh;
+}
+</style>
