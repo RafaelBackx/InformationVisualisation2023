@@ -6,6 +6,7 @@ attrs==22.1.0
 backcall==0.2.0
 beautifulsoup4==4.11.1
 bleach==4.1.0
+cachelib==0.9.0
 certifi==2022.12.7
 cffi==1.15.1
 charset-normalizer==3.1.0
@@ -15,17 +16,21 @@ comm==0.1.2
 contourpy==1.0.7
 cycler==0.11.0
 dash==2.9.1
+dash-bootstrap-components==1.4.1
 dash-core-components==2.0.0
+dash-extensions==0.1.13
 dash-html-components==2.0.0
 dash-leaflet==0.1.23
 dash-table==5.0.0
 debugpy==1.5.1
 decorator==5.1.1
 defusedxml==0.7.1
+EditorConfig==0.12.3
 entrypoints==0.4
 executing==0.8.3
 fastjsonschema==2.16.2
 Flask==2.2.3
+Flask-Caching==2.0.2
 flit_core==3.6.0
 fonttools==4.39.2
 geobuf==1.1.1
@@ -38,6 +43,7 @@ ipython-genutils==0.2.0
 itsdangerous==2.1.2
 jedi==0.18.1
 Jinja2==3.1.2
+jsbeautifier==1.14.7
 jsonschema==4.17.3
 jupyter_client==7.4.9
 jupyter_core==5.2.0
@@ -49,6 +55,7 @@ MarkupSafe==2.1.1
 matplotlib==3.7.1
 matplotlib-inline==0.1.6
 mistune==0.8.4
+more-itertools==9.1.0
 nbclassic==0.5.2
 nbclient==0.5.13
 nbconvert==6.5.4
