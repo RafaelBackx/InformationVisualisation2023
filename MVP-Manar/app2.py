@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 
 
-disaster_data = pd.read_csv("./Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
+disaster_data = pd.read_csv("../Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
 
 
 year = st.slider("Select a year", 1960, 2023, 2000)

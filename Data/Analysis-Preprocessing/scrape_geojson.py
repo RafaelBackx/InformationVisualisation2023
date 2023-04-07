@@ -4,7 +4,7 @@ import zipfile
 import io
 import os
 
-iso_codes = pd.read_csv('./Data/iso_codes.csv')
+iso_codes = pd.read_csv('../iso_codes.csv')
 
 for iso_code in iso_codes['alpha-3']:
     # iso_code = "BEL"
@@ -14,5 +14,5 @@ for iso_code in iso_codes['alpha-3']:
     if (request.status_code == 200):
         zfile = zipfile.ZipFile(io.BytesIO(request.content))
         file = zfile.namelist()[0] # there should only be one file in the zip archive
-        zfile.extract(file,f'./Data/GeoJson/')
-        os.rename(f'./Data/GeoJson/gadm41_{iso_code}_2.json', f'./Data/GeoJson/{iso_code}.json')
+        zfile.extract(file,f'../GeoJson/')
+        os.rename(f'../GeoJson/gadm41_{iso_code}_2.json', f'../GeoJson/{iso_code}.json')
