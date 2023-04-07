@@ -48,7 +48,7 @@ world_slider = dcc.Slider(min=1960,
                           id="world-year-slider")
 
 animation_button = html.Button('play', id='animation-button')
-animation_interval = dcc.Interval('animation-interval',interval=1000,disabled=True)
+animation_interval = dcc.Interval('animation-interval',interval=100,disabled=True)
 
 def generate_country_popup(country):
     country_name = country["properties"]["ADMIN"]
@@ -92,12 +92,14 @@ def animate_slider(n_clicks, animation_status):
 
 @app.callback(Output('world-year-slider', 'value'),
               Input('animation-interval','n_intervals'),
-              State('world-year-slider', 'value'))
-def update_slider(_n_clicks, current_slider_value):
-    if (current_slider_value < 2023): # fix, add max slider value
+              State('world-year-slider', 'value'),
+              State('world-year-slider', 'max'),
+              State('world-year-slider', 'min'))
+def update_slider(_n_clicks, current_slider_value, max, min):
+    if (current_slider_value < max):
         return current_slider_value + 1
     else:
-        return current_slider_value
+        return current_slider_value # or min if we want replay, maybe second button to allow for loops ?
 
 @app.callback(Output('events','data'),
               Input('world-year-slider','value'))
