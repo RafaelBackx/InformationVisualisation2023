@@ -3,7 +3,6 @@ import dash_leaflet as dl
 import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, dcc, State
 from dash_extensions.javascript import arrow_function
-import random
 
 import util
 from server import app, server
@@ -13,7 +12,7 @@ disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter
 events_geojson = util.extract_yearly_map_events(disaster_data, 1960)
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-
+util.get_world_geojson()
 ################
 #              #
 #  COMPONENTS  #
@@ -30,9 +29,11 @@ map = dl.Map(
             dl.TileLayer(), 
             # https://datahub.io/core/geo-countries#resource-countries
             dl.GeoJSON(
-                url="https://pkgstore.datahub.io/core/geo-countries/countries/archive/23f420f929e0e09c39d916b8aaa166fb/countries.geojson", 
+                data=util.get_world_geojson(),
                 id="countries", 
-                options={"style": {"color": "transparent"}}, # Invisible polygons
+                options={"style": {"color": "transparent"}}, # Invisible polygons,
+                zoomToBounds=True,
+                zoomToBoundsOnClick=True,
                 hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
             dl.GeoJSON(data=events_geojson, id="events"),
             ],
@@ -48,7 +49,7 @@ world_slider = dcc.Slider(min=1960,
                           id="world-year-slider")
 
 animation_button = html.Button('play', id='animation-button')
-animation_interval = dcc.Interval('animation-interval',interval=100,disabled=True)
+animation_interval = dcc.Interval('animation-interval',interval=500,disabled=True)
 
 def generate_country_popup(country):
     country_name = country["properties"]["ADMIN"]
@@ -56,7 +57,24 @@ def generate_country_popup(country):
     popup = dbc.Modal(
         children=[
             dbc.ModalHeader(dbc.ModalTitle(country_name)),
-            dbc.ModalBody("Here should probably be graphs")
+            dl.Map(
+                dragging=False,
+                scrollWheelZoom=False,
+                zoomControl=False,
+                children=[
+                    dl.TileLayer(), 
+                    # https://datahub.io/core/geo-countries#resource-countries
+                    dl.GeoJSON(
+                        data=util.get_country_data(country_iso),
+                        id="country", 
+                        options={"style": {"color": "#123456"}}, # Invisible polygons,
+                        zoomToBounds=True,
+                        hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
+                    dl.GeoJSON(data=events_geojson, id="events"),
+                    ],
+                style={"width": "100%", "height": "700px", "margin": "auto", "display": "block"}, 
+                id="map")
+            # dbc.ModalBody("Here should probably be graphs")
         ], 
         id=f"{country}-modal",
         fullscreen=True,
@@ -87,7 +105,6 @@ def country_click(feature):
               Input('animation-button', 'n_clicks'),
               State('animation-interval','disabled'))
 def animate_slider(n_clicks, animation_status):
-    print(animation_status)
     return not animation_status
 
 @app.callback(Output('world-year-slider', 'value'),
