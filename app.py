@@ -2,11 +2,12 @@ import pandas as pd
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, dcc, State
-from dash_extensions.javascript import arrow_function
+from dash_extensions.javascript import arrow_function, assign, Namespace
 import plotly.express as px
-
 import util
 from server import app, server
+
+ns = Namespace("dashExtensions", "default")
 
 disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
 
@@ -14,6 +15,7 @@ events_geojson = util.extract_yearly_map_events(disaster_data, 1960)
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 util.get_world_geojson()
+
 ################
 #              #
 #  COMPONENTS  #
@@ -36,7 +38,9 @@ map = dl.Map(
                 zoomToBounds=True,
                 # zoomToBoundsOnClick=True,
                 hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
-            dl.GeoJSON(data=events_geojson, id="events"),
+            dl.GeoJSON(data=events_geojson, 
+                       id="events",
+                       options=dict(pointToLayer=ns("draw_marker"))),
             ],
         style={"width": "100%", "height": "700px", "margin": "auto", "display": "block"}, 
         id="map")
@@ -71,7 +75,7 @@ def generate_country_popup(country):
                         options={"style": {"color": "#123456"}}, # Invisible polygons,
                         zoomToBounds=True,
                         hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
-                    dl.GeoJSON(data=events_geojson, id="events"),
+                    dl.GeoJSON(data=events_geojson, id="country-events"),
                     ],
                 style={"width": "100%", "height": "50vh", "margin": "auto", "display": "block"}, 
                 id="detailed-map"),
