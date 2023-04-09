@@ -11,6 +11,7 @@ __pycache__/
 *.so
 
 Data/GeoJson/*.json
+Data/GeoJson1/*.json
 
 node_modules/
 

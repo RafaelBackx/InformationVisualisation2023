@@ -3,6 +3,7 @@ import dash_leaflet as dl
 import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, dcc, State
 from dash_extensions.javascript import arrow_function
+import plotly.express as px
 
 import util
 from server import app, server
@@ -33,7 +34,7 @@ map = dl.Map(
                 id="countries", 
                 options={"style": {"color": "transparent"}}, # Invisible polygons,
                 zoomToBounds=True,
-                zoomToBoundsOnClick=True,
+                # zoomToBoundsOnClick=True,
                 hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
             dl.GeoJSON(data=events_geojson, id="events"),
             ],
@@ -72,8 +73,13 @@ def generate_country_popup(country):
                         hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
                     dl.GeoJSON(data=events_geojson, id="events"),
                     ],
-                style={"width": "100%", "height": "700px", "margin": "auto", "display": "block"}, 
-                id="map")
+                style={"width": "100%", "height": "50vh", "margin": "auto", "display": "block"}, 
+                id="detailed-map"),
+                html.Div(children=[
+                    dcc.Graph(id='gdp-graph',figure=px.line(disaster_data,x='Start Year', y="Reconstruction Costs, Adjusted ('000 US$)")),
+                    dcc.Graph(id='gdp-graph',figure=px.line(disaster_data,x='Start Year', y="Reconstruction Costs, Adjusted ('000 US$)"))
+                ],
+                style={'display': 'flex', 'height': '50vh'})
             # dbc.ModalBody("Here should probably be graphs")
         ], 
         id=f"{country}-modal",
@@ -99,7 +105,7 @@ app.layout = html.Div(children=[map, world_slider, animation_button,animation_in
 @app.callback(Output("popup", "children"), [Input("countries", "click_feature")])
 def country_click(feature):
     if feature is not None:
-       return generate_country_popup(feature)
+       return generate_country_popup(feature) # disable the interval because otherwise it draws on the other map
     
 @app.callback(Output('animation-interval', 'disabled'),
               Input('animation-button', 'n_clicks'),

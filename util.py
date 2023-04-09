@@ -1,7 +1,7 @@
 import pandas as pd
 from pandas_geojson import to_geojson
 from shapely.geometry import shape
-import geopandas
+import geobuf
 import json
 
 def extract_yearly_map_events(df, year):
@@ -11,9 +11,14 @@ def extract_yearly_map_events(df, year):
     return geojson
 
 def __get_geojson_data(filename):
-    file = open(f'./Data/GeoJson/{filename}', encoding='utf-8')
+    file = open(f'./Data/GeoJson1/{filename}', encoding='utf-8')
     geojson = json.load(file)
     return geojson
+
+# def __get_geojson_data(filename):
+#     file = open(f'./Data/GeoJson/{filename}', 'rb')
+#     json = geobuf.decode(file.read())
+#     return json
 
 
 def get_world_geojson():
