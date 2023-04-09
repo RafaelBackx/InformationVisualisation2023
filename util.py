@@ -4,9 +4,10 @@ from shapely.geometry import shape
 import geobuf
 import json
 
-def extract_yearly_map_events(df, year):
+def filter_map_events(df, filters):
     data = df[df["Latitude"].notnull() & df["Longitude"].notnull()]
-    data = data[data["Start Year"] == year]
+    for filter in filters:
+        data = data[data[filter] == filters[filter]]
     geojson = to_geojson(df=data, lat="Latitude", lon="Longitude", properties=["Dis No", "Disaster Subgroup"]) # More things can be included in the properties when it's needed
     return geojson
 

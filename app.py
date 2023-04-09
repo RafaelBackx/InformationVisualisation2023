@@ -11,10 +11,7 @@ ns = Namespace("dashExtensions", "default")
 
 disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
 
-events_geojson = util.extract_yearly_map_events(disaster_data, 1960)
-
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-util.get_world_geojson()
 
 ################
 #              #
@@ -38,7 +35,7 @@ map = dl.Map(
                 zoomToBounds=True,
                 # zoomToBoundsOnClick=True,
                 hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
-            dl.GeoJSON(data=events_geojson, 
+            dl.GeoJSON(data=util.filter_map_events(disaster_data, {"Start Year": 1960}), 
                        id="events",
                        options=dict(pointToLayer=ns("draw_marker"))),
             ],
@@ -56,7 +53,7 @@ world_slider = dcc.Slider(min=1960,
 animation_button = html.Button('play', id='animation-button')
 animation_interval = dcc.Interval('animation-interval',interval=500,disabled=True)
 
-def generate_country_popup(country):
+def generate_country_popup(country, current_year):
     country_name = country["properties"]["ADMIN"]
     country_iso = country["properties"]["ISO_A3"] # Can be useful to do lookups
     popup = dbc.Modal(
@@ -75,7 +72,9 @@ def generate_country_popup(country):
                         options={"style": {"color": "#123456"}}, # Invisible polygons,
                         zoomToBounds=True,
                         hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
-                    dl.GeoJSON(data=events_geojson, id="country-events"),
+                    dl.GeoJSON(data=util.filter_map_events(disaster_data, {"Start Year": current_year, "ISO": country_iso}), # Only show events of country
+                               id="country-events",
+                               options=dict(pointToLayer=ns("draw_marker"))),
                     ],
                 style={"width": "100%", "height": "50vh", "margin": "auto", "display": "block"}, 
                 id="detailed-map"),
@@ -106,10 +105,10 @@ app.layout = html.Div(children=[map, world_slider, animation_button,animation_in
 ###############
 
 # Open popup when click on country
-@app.callback(Output("popup", "children"), [Input("countries", "click_feature")])
-def country_click(feature):
+@app.callback(Output("popup", "children"), [Input("countries", "click_feature")], State('world-year-slider', 'value'))
+def country_click(feature, current_year):
     if feature is not None:
-       return generate_country_popup(feature) # disable the interval because otherwise it draws on the other map
+       return generate_country_popup(feature, current_year) # disable the interval because otherwise it draws on the other map
     
 @app.callback(Output('animation-interval', 'disabled'),
               Input('animation-button', 'n_clicks'),
@@ -131,4 +130,4 @@ def update_slider(_n_clicks, current_slider_value, max, min):
 @app.callback(Output('events','data'),
               Input('world-year-slider','value'))
 def update_markers(value):
-    return util.extract_yearly_map_events(disaster_data,value)
+    return util.filter_map_events(disaster_data,{"Start Year": value})
