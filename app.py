@@ -11,6 +11,7 @@ from server import app, server
 ns = Namespace("dashExtensions", "default")
 
 disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
+gdp_data = pd.read_csv('./Data/gdp_data_constant.csv')
 
 map_data = util.filter_map_events(disaster_data, {"Start Year": 1960})
 
@@ -56,10 +57,18 @@ world_slider = dcc.Slider(min=1960,
 animation_button = html.Button('play', id='animation-button')
 animation_interval = dcc.Interval('animation-interval',interval=500,disabled=True)
 
-def generate_country_popup(country, current_year):
+############
+#          #
+#  LAYOUT  #
+#          #
+############
+
+app.layout = html.Div(children=[map, world_slider, animation_button,animation_interval, html.Div(id="popup")])
+
+def generate_country_popup(country,df):
     country_name = country["properties"]["ADMIN"]
     country_iso = country["properties"]["ISO_A3"] # Can be useful to do lookups
-    country_data = util.filter_map_events(map_data, {"ISO": country_iso})
+    country_data = util.filter_map_events(df, {"ISO": country_iso})
     popup = dbc.Modal(
         children=[
             dbc.ModalHeader(dbc.ModalTitle(country_name)),
@@ -82,25 +91,38 @@ def generate_country_popup(country, current_year):
                     ],
                 style={"width": "100%", "height": "50vh", "margin": "auto", "display": "block"}, 
                 id="detailed-map"),
+                dcc.Slider(min=1960, max=2023, step=1, value=2021, marks=None,tooltip={'placement': 'bottom', 'always_visible': True}, id='country-year-slider'),
                 html.Div(children=[
-                    dcc.Graph(id='gdp-graph',figure=px.line(disaster_data,x='Start Year', y="Reconstruction Costs, Adjusted ('000 US$)")),
-                    dcc.Graph(id='gdp-graph',figure=px.line(disaster_data,x='Start Year', y="Reconstruction Costs, Adjusted ('000 US$)"))
+                    dcc.Graph(id='gdp-graph',figure=px.line(df,x='Start Year', y="Reconstruction Costs, Adjusted ('000 US$)")),
+                    html.Div(children= [
+                        dcc.Graph(id='affected-graph',figure=px.line(df,x='Start Year', y="Reconstruction Costs, Adjusted ('000 US$)")),
+                        html.Div(
+                                [
+                                    dbc.RadioItems(
+                                        id="graph-toggle-buttons",
+                                        className="btn-group",
+                                        inputClassName="btn-check",
+                                        labelClassName="btn btn-outline-primary",
+                                        labelCheckedClassName="active",
+                                        options=[
+                                            {"label": "Deaths", "value": 'deaths'},
+                                            {"label": "Injuries", "value": 'injuries'},
+                                            {"label": "Homeless", "value": 'homeless'},
+                                        ],
+                                        value='deaths',
+                                    ),
+                                ],
+                                className="radio-group",
+                            )
+                    ],
+                    style={'display': 'flex'})
                 ],
                 style={'display': 'flex', 'height': '50vh'})
-            # dbc.ModalBody("Here should probably be graphs")
         ], 
-        id=f"{country}-modal",
+        id=f"{country_iso}-modal",
         fullscreen=True,
         is_open=True)
     return popup
-
-############
-#          #
-#  LAYOUT  #
-#          #
-############
-
-app.layout = html.Div(children=[map, world_slider, animation_button,animation_interval, html.Div(id="popup")])
 
 ###############
 #             #
@@ -109,15 +131,16 @@ app.layout = html.Div(children=[map, world_slider, animation_button,animation_in
 ###############
 
 # Open popup when click on country
-@app.callback(Output("popup", "children"), [Input("countries", "click_feature")], State('world-year-slider', 'value'))
-def country_click(feature, current_year):
+@app.callback(Output("popup", "children"), [Input("countries", "click_feature")])
+def country_click(feature):
     if feature is not None:
-       return generate_country_popup(feature, current_year) # disable the interval because otherwise it draws on the other map
+       return generate_country_popup(feature, map_data) # disable the interval because otherwise it draws on the other map
     
 @app.callback(Output('animation-interval', 'disabled'),
               Input('animation-button', 'n_clicks'),
-              State('animation-interval','disabled'))
+              State('animation-interval','disabled'),prevent_initial_call=True)
 def animate_slider(n_clicks, animation_status):
+    print(animation_status)
     return not animation_status
 
 @app.callback(Output('world-year-slider', 'value'),
@@ -136,3 +159,23 @@ def update_slider(_n_clicks, current_slider_value, max, min):
 def update_markers(value):
     map_data = util.filter_map_events(disaster_data, {"Start Year": value})
     return util.convert_events_to_geojson(map_data)
+
+@app.callback([Output('gdp-graph','figure'), Output('affected-graph','figure')],[Input('country-year-slider','value'),Input('graph-toggle-buttons','value')], State("countries", "click_feature"))
+def country_slider_change(value,toggle_value,country):
+    country_code = country["properties"]["ISO_A3"]
+    # update graphs gpd graph
+    years = list(range(1960,value+1))
+    country_gdp_data = util.get_gdp_data(gdp_data,years,country_code)
+    gdp_fig = px.line(None,years,country_gdp_data)
+
+    #update injuries graph
+    column_map = {
+        'deaths': 'Total Deaths',
+        'injuries': 'No Injured',
+        'homeless': 'No Homeless'
+    }
+    column = column_map[toggle_value]
+    data = disaster_data[disaster_data['ISO'] == country_code]
+    data = data.groupby(['Start Year', 'Disaster Subgroup'], as_index=False).sum(numeric_only=True)
+    affected_fig = px.line(data[data['Start Year'] <= value],'Start Year',column,color='Disaster Subgroup', log_y=True)
+    return gdp_fig, affected_fig
