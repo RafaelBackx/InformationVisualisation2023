@@ -3,6 +3,7 @@ import dash_leaflet as dl
 import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, dcc, State
 from dash_extensions.javascript import arrow_function, assign, Namespace
+from dash.exceptions import PreventUpdate
 import plotly.express as px
 import util
 from server import app, server
@@ -10,6 +11,8 @@ from server import app, server
 ns = Namespace("dashExtensions", "default")
 
 disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
+
+map_data = util.filter_map_events(disaster_data, {"Start Year": 1960})
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -35,7 +38,7 @@ map = dl.Map(
                 zoomToBounds=True,
                 # zoomToBoundsOnClick=True,
                 hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
-            dl.GeoJSON(data=util.filter_map_events(disaster_data, {"Start Year": 1960}), 
+            dl.GeoJSON(data=util.convert_events_to_geojson(map_data), 
                        id="events",
                        options=dict(pointToLayer=ns("draw_marker"))),
             ],
@@ -56,6 +59,7 @@ animation_interval = dcc.Interval('animation-interval',interval=500,disabled=Tru
 def generate_country_popup(country, current_year):
     country_name = country["properties"]["ADMIN"]
     country_iso = country["properties"]["ISO_A3"] # Can be useful to do lookups
+    country_data = util.filter_map_events(map_data, {"ISO": country_iso})
     popup = dbc.Modal(
         children=[
             dbc.ModalHeader(dbc.ModalTitle(country_name)),
@@ -72,7 +76,7 @@ def generate_country_popup(country, current_year):
                         options={"style": {"color": "#123456"}}, # Invisible polygons,
                         zoomToBounds=True,
                         hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
-                    dl.GeoJSON(data=util.filter_map_events(disaster_data, {"Start Year": current_year, "ISO": country_iso}), # Only show events of country
+                    dl.GeoJSON(data=util.convert_events_to_geojson(country_data), # Only show events of country
                                id="country-events",
                                options=dict(pointToLayer=ns("draw_marker"))),
                     ],
@@ -130,4 +134,5 @@ def update_slider(_n_clicks, current_slider_value, max, min):
 @app.callback(Output('events','data'),
               Input('world-year-slider','value'))
 def update_markers(value):
-    return util.filter_map_events(disaster_data,{"Start Year": value})
+    map_data = util.filter_map_events(disaster_data, {"Start Year": value})
+    return util.convert_events_to_geojson(map_data)

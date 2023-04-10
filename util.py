@@ -8,7 +8,10 @@ def filter_map_events(df, filters):
     data = df[df["Latitude"].notnull() & df["Longitude"].notnull()]
     for filter in filters:
         data = data[data[filter] == filters[filter]]
-    geojson = to_geojson(df=data, lat="Latitude", lon="Longitude", properties=["Dis No", "Disaster Subgroup"]) # More things can be included in the properties when it's needed
+    return data
+
+def convert_events_to_geojson(df):
+    geojson = to_geojson(df=df, lat="Latitude", lon="Longitude", properties=["Dis No", "Disaster Subgroup"]) # More things can be included in the properties when it's needed
     return geojson
 
 def __get_geojson_data(filename):
