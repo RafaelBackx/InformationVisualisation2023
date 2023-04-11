@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, dcc, State
 from dash_extensions.javascript import arrow_function, assign, Namespace
 from dash.exceptions import PreventUpdate
+from dash_iconify import DashIconify
 import plotly.express as px
 import util
 from server import app, server
@@ -37,7 +38,6 @@ map = dl.Map(
                 id="countries", 
                 options={"style": {"color": "transparent"}}, # Invisible polygons,
                 zoomToBounds=True,
-                # zoomToBoundsOnClick=True,
                 hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
             dl.GeoJSON(data=util.convert_events_to_geojson(map_data), 
                        id="events",
@@ -54,8 +54,35 @@ world_slider = dcc.Slider(min=1960,
                           tooltip={"placement": "bottom", "always_visible": True},
                           id="world-year-slider")
 
-animation_button = html.Button('play', id='animation-button')
+animation_button = dbc.Button(children=[
+                                    "Play",
+                                    DashIconify(
+                                        icon="material-symbols:play-arrow-rounded"
+                                    )
+                                ], 
+                                color="success", 
+                                class_name="me-1", 
+                                id="animation-button")
+
 animation_interval = dcc.Interval('animation-interval',interval=500,disabled=True)
+
+worldwide_events_distribution = dcc.Graph(id="worldwide-events-dist")
+worldwide_affected_graph = dcc.Graph(id="worldwide-affected-graph")
+worldwide_toggle_buttons = html.Div(children=[
+                                        dbc.RadioItems(
+                                        id="worldwide-affected-buttons",
+                                        style={"display": "flex", "flex-direction": "column"},
+                                        className="btn-group",
+                                        inputClassName="btn-check",
+                                        labelClassName="btn btn-outline-primary",
+                                        labelCheckedClassName="active",
+                                        options=[
+                                            {"label": "Deaths", "value": 'deaths'},
+                                            {"label": "Injuries", "value": 'injuries'},
+                                            {"label": "Homeless", "value": 'homeless'},
+                                        ],
+                                        value='deaths'),
+                                    ], className="radio-group")
 
 ############
 #          #
@@ -63,7 +90,42 @@ animation_interval = dcc.Interval('animation-interval',interval=500,disabled=Tru
 #          #
 ############
 
-app.layout = html.Div(children=[map, world_slider, animation_button,animation_interval, html.Div(id="popup")])
+app.layout = html.Div(children=[
+    dbc.Row(children=[
+        dbc.Col(children=[
+            map,
+            dbc.Row(children=[
+                dbc.Col(children=[
+                    animation_button
+                ], width="auto"),
+                dbc.Col(children=[
+                    world_slider
+                ]),
+            ], className="g-0")
+        ])
+    ]),
+    dbc.Row(children=[
+        dbc.Col(children=[
+            worldwide_events_distribution
+        ], width=6),
+        dbc.Col(children=[
+            dbc.Row(children=[
+                dbc.Col(children=[
+                    worldwide_affected_graph
+                ], width=9),
+                dbc.Col(children=[
+                    worldwide_toggle_buttons
+                ])
+            ], className="g-0")
+        ], width=6)
+    ]),
+    dbc.Row(children=[
+        animation_interval,
+        html.Div(id="popup")
+    ])
+])
+
+# app.layout = html.Div(children=[map, world_slider, animation_button, animation_interval, worldwide_events_distribution, worldwide_affected_graph, html.Div(id="popup")])
 
 def generate_country_popup(country,df):
     country_name = country["properties"]["ADMIN"]
@@ -138,7 +200,7 @@ def country_click(_n_clicks,feature):
     
 @app.callback(Output('animation-interval', 'disabled'),
               Input('animation-button', 'n_clicks'),
-              State('animation-interval','disabled'),prevent_initial_call=True)
+              State('animation-interval','disabled'))
 def animate_slider(n_clicks, animation_status):
     return not animation_status
 
@@ -154,10 +216,14 @@ def update_slider(_n_clicks, current_slider_value, max, min):
         return current_slider_value # or min if we want replay, maybe second button to allow for loops ?
 
 @app.callback(Output('events','data'),
+              Output('worldwide-events-dist', 'figure'),
+              Output('worldwide-affected-graph', 'figure'),
               Input('world-year-slider','value'))
-def update_markers(value):
+def worldwide_slider_change(value):
     map_data = util.filter_map_events(disaster_data, {"Start Year": value})
-    return util.convert_events_to_geojson(map_data)
+    event_count = map_data.groupby("Disaster Subgroup").count().reset_index()
+    event_dist_fig = px.bar(event_count, x="Dis No", y="Disaster Subgroup")
+    return util.convert_events_to_geojson(map_data), event_dist_fig, event_dist_fig
 
 @app.callback([Output('gdp-graph','figure'), Output('affected-graph','figure')],[Input('country-year-slider','value'),Input('graph-toggle-buttons','value')], State("countries", "click_feature"))
 def country_slider_change(value,toggle_value,country):
@@ -179,6 +245,7 @@ def country_slider_change(value,toggle_value,country):
         'homeless': 'No Homeless'
     }
     column = column_map[toggle_value]
+    data = util.filter_map_events(disaster_data, {'ISO': country_code})
     data = data.groupby(['Start Year', 'Disaster Subgroup'], as_index=False).sum(numeric_only=True)
     affected_fig = px.line(data[data['Start Year'] <= value],'Start Year',column,color='Disaster Subgroup')
     return gdp_fig, affected_fig
