@@ -220,10 +220,18 @@ def update_slider(_n_clicks, current_slider_value, max, min):
               Output('worldwide-affected-graph', 'figure'),
               Input('world-year-slider','value'))
 def worldwide_slider_change(value):
+    # Update general map
     map_data = util.filter_map_events(disaster_data, {"Start Year": value})
+
+    # Update event distribution graph
     event_count = map_data.groupby("Disaster Subgroup").count().reset_index()
     event_dist_fig = px.bar(event_count, x="Dis No", y="Disaster Subgroup")
-    return util.convert_events_to_geojson(map_data), event_dist_fig, event_dist_fig
+
+    # Update affected graph
+    events_affected = disaster_data[disaster_data["Start Year"] <= value]
+    events_affected = events_affected.groupby(["Start Year", "Disaster Subgroup"], as_index=False).sum(numeric_only=True)
+    affected_fig = px.line(events_affected, "Start Year", "Total Deaths", color="Disaster Subgroup")
+    return util.convert_events_to_geojson(map_data), event_dist_fig, affected_fig
 
 @app.callback([Output('gdp-graph','figure'), Output('affected-graph','figure')],[Input('country-year-slider','value'),Input('graph-toggle-buttons','value')], State("countries", "click_feature"))
 def country_slider_change(value,toggle_value,country):
