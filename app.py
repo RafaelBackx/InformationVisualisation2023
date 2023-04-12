@@ -193,8 +193,8 @@ def generate_country_popup(country,df):
 ###############
 
 # Open popup when click on country
-@app.callback(Output("popup", "children"), [Input("countries", "click_feature")])
-def country_click(feature):
+@app.callback(Output("popup", "children"),[Input('countries', 'n_clicks')], [State("countries", "click_feature")], prevent_initial_call=True)
+def country_click(_n_clicks,feature):
     if feature is not None:
        return generate_country_popup(feature, map_data) # disable the interval because otherwise it draws on the other map
     
@@ -236,10 +236,11 @@ def worldwide_slider_change(value):
 @app.callback([Output('gdp-graph','figure'), Output('affected-graph','figure')],[Input('country-year-slider','value'),Input('graph-toggle-buttons','value')], State("countries", "click_feature"))
 def country_slider_change(value,toggle_value,country):
     country_code = country["properties"]["ISO_A3"]
+    data = util.filter_map_events(disaster_data, {'ISO': country_code})
     # update graphs gpd graph
     years = list(range(1960,value+1))
-    country_gdp_data = util.get_gdp_data(gdp_data,years,country_code)
-    gdp_fig = px.line(None,years,country_gdp_data)
+    country_gdp_data = util.get_gdp_data(gdp_data,data[data["Start Year"] <= value],years,country_code)
+    gdp_fig = px.line(country_gdp_data, 'Start Year', 'share')
 
     #update injuries graph
     column_map = {
@@ -250,5 +251,5 @@ def country_slider_change(value,toggle_value,country):
     column = column_map[toggle_value]
     data = util.filter_map_events(disaster_data, {'ISO': country_code})
     data = data.groupby(['Start Year', 'Disaster Subgroup'], as_index=False).sum(numeric_only=True)
-    affected_fig = px.line(data[data['Start Year'] <= value],'Start Year',column,color='Disaster Subgroup', log_y=True)
+    affected_fig = px.line(data[data['Start Year'] <= value],'Start Year',column,color='Disaster Subgroup')
     return gdp_fig, affected_fig

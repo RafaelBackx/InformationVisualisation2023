@@ -9,13 +9,26 @@ def filter_map_events(df, filters):
         data = data[data[filter] == filters[filter]]
     return data
 
-def get_gdp_data(df,years,country):
+def get_gdp_data(df_gdp : pd.DataFrame,df_disaster : pd.DataFrame,years,country):
     columns = years + ['Country Code']
     columns = [str(c) for c in columns]
-    year_data = df[columns]
+    year_data = df_gdp[columns]
     data : pd.DataFrame = year_data[year_data['Country Code'] == country]
     data = data[[str(y) for y in years]]
-    return data.transpose().values.flatten()
+    data = data.transpose()
+
+    data_by_year = df_disaster.groupby('Start Year', as_index=False).sum(numeric_only=True)
+
+    def calculate_gdp_share(row):
+        year = row['Start Year']
+        col = data.columns[0]
+        gdp = data[col][str(int(year))]
+        damages = row['Total Damages, Adjusted (\'000 US$)'] * 1000
+        return (damages / gdp) * 100
+    
+    data_by_year['share'] = data_by_year.apply(calculate_gdp_share,axis=1)
+    return data_by_year
+
 
 
 def convert_events_to_geojson(df):
