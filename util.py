@@ -23,8 +23,8 @@ def get_gdp_data(df_gdp : pd.DataFrame,df_disaster : pd.DataFrame,years,country)
         year = row['Start Year']
         col = data.columns[0]
         gdp = data[col][str(int(year))]
-        damages = row['Total Damages, Adjusted (\'000 US$)']
-        return damages / gdp
+        damages = row['Total Damages, Adjusted (\'000 US$)'] * 1000
+        return (damages / gdp) * 100
     
     data_by_year['share'] = data_by_year.apply(calculate_gdp_share,axis=1)
     return data_by_year

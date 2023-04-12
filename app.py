@@ -233,10 +233,6 @@ def country_slider_change(value,toggle_value,country):
     years = list(range(1960,value+1))
     country_gdp_data = util.get_gdp_data(gdp_data,data[data["Start Year"] <= value],years,country_code)
     gdp_fig = px.line(country_gdp_data, 'Start Year', 'share')
-    # data_by_year = data.groupby('Start Year').sum(numeric_only=True)
-    # data_by_year['share_gdp'] = data_by_year["Total Damages, Adjusted (\'000 US$)"] / country_gdp_data
-    # print(data_by_year['share_gdp'])
-    # gdp_fig = px.line(data[data['Start Year'] <= value],'Start Year',"Total Damages, Adjusted (\'000 US$)")
 
     #update injuries graph
     column_map = {
