@@ -215,7 +215,7 @@ def generate_country_popup(country, current_year):
 def country_click(_n_clicks, feature, current_year):
     if feature is not None:
        return generate_country_popup(feature, current_year) # disable the interval because otherwise it draws on the other map
-    
+
 @app.callback(Output('animation-interval', 'disabled'),
               Input('animation-button', 'n_clicks'),
               State('animation-interval','disabled'), prevent_initial_call=True)

@@ -33,6 +33,8 @@ def get_gdp_data(df_gdp : pd.DataFrame,df_disaster : pd.DataFrame,years,country)
 
 def convert_events_to_geojson(df):
     geojson = to_geojson(df=df, lat="Latitude", lon="Longitude", properties=["Dis No", "Disaster Subgroup"]) # More things can be included in the properties when it's needed
+    for event in geojson["features"]:
+        event["properties"]["tooltip"] = df[df["Dis No"] == event["properties"]["Dis No"]]["Disaster Type"].values[0]
     return geojson
 
 def __get_geojson_data(filename):
