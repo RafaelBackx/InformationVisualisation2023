@@ -102,6 +102,14 @@ def generate_affected_graph(current_year, current_toggle):
     column = column_map[current_toggle]
     return px.line(affected_data, "Start Year", column, color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
 
+def create_event_accordion(event):
+    return dbc.AccordionItem(title=f'{event["Disaster Type"]} ({util.get_property(event, "Event Name")})',
+        children=[
+            html.P(f'{event["Disaster Subgroup"]}/{event["Disaster Type"]}/{util.get_property(event, "Disaster Subsubtype")}'),
+            html.P(util.get_date(event)),
+            html.P(f'{event["Region"]}')
+    ])
+
 ############
 #          #
 #  LAYOUT  #
@@ -149,28 +157,40 @@ def generate_country_popup(country, current_year):
     country_name = country["properties"]["ADMIN"]
     country_iso = country["properties"]["ISO_A3"] # Can be useful to do lookups
     country_data = util.filter_map_events(disaster_data, {"ISO": country_iso, "Start Year": current_year})
+    missing_events = util.get_events_without_location(country_data)
+
     popup = dbc.Modal(
         children=[
             dbc.ModalHeader(dbc.ModalTitle(country_name)),
-            dl.Map(
-                dragging=False,
-                scrollWheelZoom=False,
-                zoomControl=False,
-                children=[
-                    dl.TileLayer(), 
-                    # https://datahub.io/core/geo-countries#resource-countries
-                    dl.GeoJSON(
-                        data=util.get_country_data(country_iso),
-                        id="country", 
-                        options={"style": {"color": "#123456"}}, # Invisible polygons,
-                        zoomToBounds=True,
-                        hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
-                    dl.GeoJSON(data=util.convert_events_to_geojson(country_data), # Only show events of country
-                               id="country-events",
-                               options=dict(pointToLayer=ns("draw_marker"))),
-                    ],
-                style={"width": "100%", "height": "50vh", "margin": "auto", "display": "block"}, 
-                id="detailed-map"),
+            html.Div(children=[
+                # dcc.Loading(id='map-loader', children=[
+                    dl.Map(
+                        # dragging=False,
+                        # scrollWheelZoom=False,
+                        # zoomControl=False,
+                        preferCanvas=True,
+                        children=[
+                            dl.TileLayer(), 
+                            # https://datahub.io/core/geo-countries#resource-countries
+                            dl.GeoJSON(
+                                data=util.get_country_data(country_iso),
+                                id="country", 
+                                options={"style": {"color": "#123456"}}, # Invisible polygons,
+                                zoomToBounds=True,
+                                hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))), # Gray border on hover (line_thickness, color, line_style)
+                            dl.GeoJSON(data=util.convert_events_to_geojson(country_data), # Only show events of country
+                                    id="country-events",
+                                    options=dict(pointToLayer=ns("draw_marker"))),
+                            ],
+                        style={"flex-basis": '65vw', "height": "50vh", "margin": "auto", "display": "block"}, 
+                        id="detailed-map"),
+                    # ]),
+                html.Div(children=[
+                    dbc.Accordion(id='events-accordion', children=[create_event_accordion(event) for _,event in missing_events.iterrows()]),
+                    html.Div(id='country-agg-data')
+                ], style={"flex-basis": '25vw', 'margin': '10px auto'}),
+            ],
+            style={'display': 'flex', 'gap': '1vw'}),
                 dcc.Slider(min=1960, max=2023, step=1, value=current_year, marks=None,tooltip={'placement': 'bottom', 'always_visible': True}, id='country-year-slider'),
                 html.Div(children=[
                     dcc.Graph(id='gdp-graph',figure=px.line(map_data,x='Start Year', y="Reconstruction Costs, Adjusted ('000 US$)")),
@@ -254,7 +274,9 @@ def worldwide_slider_change(current_year, current_toggle):
 
 @app.callback([Output('country-events', 'data'),
                Output('gdp-graph','figure'), 
-               Output('affected-graph','figure')],
+               Output('affected-graph','figure'),
+               Output('events-accordion','children'),
+               Output('country-agg-data','children')],
                [Input('country-year-slider','value'),
                 Input('graph-toggle-buttons','value')], 
                 State("countries", "click_feature"))
@@ -271,4 +293,14 @@ def country_slider_change(current_year,toggle_value,country):
     # update affected graph
     affected_fig = generate_affected_graph(current_year, toggle_value)
 
-    return util.convert_events_to_geojson(map_data), gdp_fig, affected_fig
+    accordion_items = [create_event_accordion(event) for _,event in map_data.iterrows()]
+
+    # aggregate data
+    number_of_deaths = map_data['Total Deaths'].sum()
+    number_of_injured = map_data['No Injured'].sum()
+    number_of_homeless = map_data['No Homeless'].sum()
+
+    aggr_data = [f'Number of deaths: {number_of_deaths}', f'Number of injured: {number_of_injured}', f'Number of homeless: {number_of_homeless}']
+    aggr_data_html = [html.P(value) for value in aggr_data]
+
+    return util.convert_events_to_geojson(map_data), gdp_fig, affected_fig, accordion_items, aggr_data_html

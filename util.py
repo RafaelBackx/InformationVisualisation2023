@@ -9,6 +9,10 @@ def filter_map_events(df, filters):
         data = data[data[filter] == filters[filter]]
     return data
 
+def get_events_without_location(df: pd.DataFrame):
+    data = df[df['Latitude'].isnull() &df['Longitude'].isnull()]
+    return data
+
 def get_gdp_data(df_gdp : pd.DataFrame,df_disaster : pd.DataFrame,years,country):
     columns = years + ['Country Code']
     columns = [str(c) for c in columns]
@@ -25,9 +29,12 @@ def get_gdp_data(df_gdp : pd.DataFrame,df_disaster : pd.DataFrame,years,country)
         gdp = data[col][str(int(year))]
         damages = row['Total Damages, Adjusted (\'000 US$)'] * 1000
         return (damages / gdp) * 100
-    
-    data_by_year['share'] = data_by_year.apply(calculate_gdp_share,axis=1)
-    return data_by_year
+
+    if (data_by_year.empty):
+        return data_by_year
+    else:
+        data_by_year['share'] = data_by_year.apply(calculate_gdp_share,axis=1)
+        return data_by_year
 
 
 
@@ -44,5 +51,20 @@ def __get_geojson_data(filename):
 
 def get_world_geojson():
     return __get_geojson_data('countries.json')
+
 def get_country_data(country_code):
     return __get_geojson_data(f'{country_code}.json')
+
+def get_property(event, property):
+    name = event[property]
+    return name if pd.notna(name) else ''
+
+def get_date(event):
+    year = event["Start Year"]
+    month = event["Start Month"]
+    day = event["Start Day"]
+    if (pd.isna(day)):
+        return f'{int(year)}-{int(month)}'
+    if (pd.isna(month)):
+        return f'{int(year)}'
+    return f'{int(year)}-{int(month)}-{int(day)}'
