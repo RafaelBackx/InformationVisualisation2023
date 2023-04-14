@@ -53,7 +53,7 @@ def get_world_geojson():
     return __get_geojson_data('countries.json')
 
 def get_country_data(country_code):
-    return __get_geojson_data(f'{country_code}.json')
+    return __get_geojson_data(f'{country_code}.json_opt.json')
 
 def get_property(event, property):
     name = event[property]
