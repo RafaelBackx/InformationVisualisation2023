@@ -31,6 +31,48 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 #              #
 ################
 
+geophysical_icon = html.Img(src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAC+klEQVR4nO2YS2gTURRAnz9EFxYUhWrIvTNE3biR+lsU60YpiNRNaOfdiQuRrtyJ61YQFHXlUtwoVcRFwYWflaWWdu4bY8EPqF2JgqAIivhF28jLTEzSX5IyyczAHHiQzJvFPXPf574nREJCQkLCPBSEWCbiDlP6sGNBn4gz+f6OVSzhlSKYGukSK0VcURJOKcKCbkxwXMSRcdvcxBI/l0QUwZup7sxqETeY4IqXCbynCJ4Wf9vGSREn3D7YqQj/MsFvl3A723C0KCLxfb6/fa2IC0ww6g+ni6VnSgL7GTot4oBjQV9RQsKHfNZsKz1nwkN+Vj4xZdaJKDORTa3Rk9rLhnFidr+SOOLLDIgoowgG/eEzeTsrVszudyyz01+Kv6jc5g0iijBlUizxmzescP/C78EDX+a8iCJMcMuXuLnoezLdwYQzivDHxLHUFhElHMvs1MGxxO/5nJmu9T5LHPbmClwWUaEwIJYriU/85Xawsk/v5IrgupJwprICdm1zB0ucZgm/6hFvCXp1KtdTOFQqQyayqfXl/aS6T090Jnjr910VYZPPmm16vyjXU8X94xET7GMJr6ueexkbm9sHfxzL3NqyoB2CA7oQrHzGhJfmBtt4Y8IbLZHQZwn9FVnC85KMyhnbdC0ViIjEaT1vmi7CEvsrvt7LPKXbFeHdICQqZIabX3ZIeDdrHlT/D2Z4zaicuatpIrpaDTroRbJyv2mrkq5WWyWiCAuuhV2Bi7DEs62UUMUGY4FKTGYzG5WEr60XwYJjGwcDE9F1UBgSyqvB3FJJ49i417WMI0uScHoBdR0UlojyJn6PLmmY8IXew/QdWcMiSsK1MCWUN1eeKQkX/os1egOjd1h9AxK+CFZniOBj5R1APdm4E3bQauHhdq4uiceWscc/vRUi2ST+HJcItbNB+DD0YKnWEMOhxSVs6A47SFWfyIxLxu55JfSaXT6uRr8xwei8Iq7E3rCDU43KSOypktAXafqMET8RWNommZCQkJCQIKr5B4e3yC7b0qbRAAAAAElFTkSuQmCC", style={"width": "auto", "height": "24px"})
+meteorological_icon = html.Img(src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAxElEQVR4nO3UPWpCQRiF4cdGXYN2rsBNWIkuJKhlNiCmyZrEMj9NIuIybDSCNk4YuQS5GOWqQwh44FQD75k538dw139QDSO8Y4E1ZnhG41r4A7YIvziePV4KfzoBzju+ppBa2BUIiO6eg5bRxys2BeEBc5RODXJ6ATTk3DwGr+LzBvCAFSboHAYMbgQPOcfV3ustUUBAOwZ8JQwYy3pLFbBMXdFStvtJK6rgI+WQo+oJQoaOfBU9vFwx+FVWy8/N7/p7fQOe/B+BqqKyIgAAAABJRU5ErkJggg==", style={"width": "auto", "height": "24px"})
+hydrological_icon = html.Img(src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABTElEQVR4nM2VO0sDQRDHrxAfxJ07bAQ7sbLwUfsZ7PxI+QA+GjEfwSZF4swqQtTCLt1hIciZmUNr0WChl8idFxIQ3UcScOAPVyy/3+7scBsE/6lCLXt5pgJXOt0BlPc8+fdE4ZXLh2UgSYGkX+Z54aKzMhl6qz8DJNcj8O8g3wan8ezYfEA+/AEfSg7Ggiud7v4KL5Ov8YKH9SRSxGISAMoTaF5y3z1xzQgfnIK45gRfbCbrgPxhKwDiz8oZb1gLALlhD5fBhTes4OH54yoQZx6CHmBnzShQKFVnOJV3gVK1EHDbX8Bts4C46y0g7tqc4NVfIC9GARDf+QoAJbZokRx5C4j3jYKwmW57jSlxFqFsGgWuvwkYTtBxYF2tZB5QbhwEVwHez9kLSokiPvm7XZwVO3eGj1SkZat4dFBihfxWjDFKnD821j2fZn0BzxejKOBMlnUAAAAASUVORK5CYII=", style={"width": "auto", "height": "24px"})
+climatological_icon = html.Img(src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABIUlEQVR4nOVVW04CQRCsQ4gHM3gF8RogF8CDAAcQf30kggehRnfg2zLTLjjgZkKv7peTdLLZna7qrtmuARxLAc8KeERXSwFK0SXBkwIe2gMQ1yLmiui5cyPORMxEDEoEM5OBWLQo7r7OnZaq6Im4EzHZv9vgXMRYxEoBWwtiKeImfcsIJpbr6V7EpQLi7nAbImqNvrfbb3DiowD+FWmPl8RkKVeuo6i80owd4Ko7GXkIXlsQLEvjr9wCnPJod+CNmPV0Kp/QlgRVlv8D81ii1Z9J1LRsiPwEwy5/0/fkRScTGMka/ZMH7Q0XLvADkoCqWLkHvLbcxYHZRTPAkYgXBWws0jMxzGURcWu5Jam6t2tikDb84sKZirjy5mIP8i8v/U/2bn/Cuda4GwAAAABJRU5ErkJggg==", style={"width": "auto", "height": "24px"})
+
+map_legend = html.Div(children=[
+    dbc.Col(children=[
+        dbc.Row(children=[
+            dbc.Col(children=[
+                geophysical_icon
+            ]),
+            dbc.Col(children=[
+                html.P("Geophysical", style={"display": "flex", "alignItems": "center", "marginBottom": "0"})
+            ], style={"display": "flex"}) 
+        ]),
+        dbc.Row(children=[
+            dbc.Col(children=[
+                meteorological_icon
+            ]),
+            dbc.Col(children=[
+                html.P("Meteorological", style={"display": "flex", "alignItems": "center", "marginBottom": "0"})
+            ], style={"display": "flex"})
+        ]),
+        dbc.Row(children=[
+            dbc.Col(children=[
+                hydrological_icon
+            ]),
+            dbc.Col(children=[
+                html.P("Hydrological", style={"display": "flex", "alignItems": "center", "marginBottom": "0"})
+            ], style={"display": "flex"})
+        ]),
+        dbc.Row(children=[
+            dbc.Col(children=[
+                climatological_icon
+            ]),
+            dbc.Col(children=[
+                html.P("Climatological", style={"display": "flex", "alignItems": "center", "marginBottom": "0"})
+            ], style={"display": "flex"})
+        ])
+    ], style={"padding": "1rem"})
+], style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000", "backgroundColor": "white", "borderRadius": "25px", "opacity": "0.75"})
+
 map = dl.Map(
         maxBounds=[[-90,-180],[90,180]], 
         maxBoundsViscosity=1.0, 
@@ -49,6 +91,7 @@ map = dl.Map(
             dl.GeoJSON(data=util.convert_events_to_geojson(map_data), 
                        id="events",
                        options=dict(pointToLayer=ns("draw_marker"))),
+            map_legend
             ],
         style={"width": "100%", "height": "700px", "margin": "auto", "display": "block"}, 
         id="map")
@@ -78,7 +121,7 @@ worldwide_affected_graph = dcc.Graph(id="worldwide-affected-graph")
 worldwide_toggle_buttons = html.Div(children=[
                                         dbc.RadioItems(
                                         id="worldwide-affected-buttons",
-                                        style={"display": "flex", "flex-direction": "column"},
+                                        style={"display": "flex", "flexDirection": "column"},
                                         className="btn-group",
                                         inputClassName="btn-check",
                                         labelClassName="btn btn-outline-primary",
@@ -100,7 +143,10 @@ def generate_affected_graph(current_year, current_toggle):
         'homeless': 'No Homeless'
     }
     column = column_map[current_toggle]
-    return px.line(affected_data, "Start Year", column, color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
+    fig = px.line(affected_data, "Start Year", column, color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
+    fig.update_traces(mode="markers+lines", hovertemplate=None)
+    fig.update_layout(hovermode="x unified")
+    return fig
 
 ############
 #          #
@@ -246,6 +292,11 @@ def worldwide_slider_change(current_year, current_toggle):
     event_count = map_data.groupby("Disaster Subgroup").count().reset_index()
     event_count["colour"] = event_count["Disaster Subgroup"].map(EVENT_COLOURS)
     event_dist_fig = px.bar(event_count, x="Dis No", y="Disaster Subgroup", color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
+    event_dist_fig.update_traces(hovertemplate="<br>".join([
+        "Disaster Subgroup: %{y}",
+        "Disasters: %{x}",
+        "<extra></extra>"
+    ]))
 
     # Update affected
     affected_fig = generate_affected_graph(current_year, current_toggle)
