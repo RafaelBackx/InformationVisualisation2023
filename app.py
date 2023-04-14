@@ -297,6 +297,9 @@ def worldwide_slider_change(current_year, current_toggle):
         "Disasters: %{x}",
         "<extra></extra>"
     ]))
+    event_dist_fig.update_layout(hoverlabel=dict(
+        bgcolor="white"
+    ))
 
     # Update affected
     affected_fig = generate_affected_graph(current_year, current_toggle)
