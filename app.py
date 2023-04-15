@@ -149,13 +149,20 @@ def generate_affected_graph(current_year, current_toggle):
     fig.update_layout(hovermode="x unified")
     return fig
 
-def create_event_accordion(event):
-    return dbc.AccordionItem(title=f'{event["Disaster Type"]} ({util.get_property(event, "Event Name")})',
+def create_event_accordion(event, missing_events):
+    dis_no = event['Dis No']
+    missing_events_no = [e['Dis No'] for _, e in missing_events.iterrows()]
+    missing = dis_no in missing_events_no
+    accordion = dbc.AccordionItem(
+        title=f'{event["Disaster Type"]} ({util.get_property(event, "Event Name")})',
         children=[
             html.P(f'{event["Disaster Subgroup"]}/{event["Disaster Type"]}/{util.get_property(event, "Disaster Subsubtype")}'),
             html.P(util.get_date(event)),
-            html.P(f'{event["Region"]}')
+            html.P(f'{event["Region"]}'),
+            html.P(f'{missing}') #TODO add icon
+            # html.I(className='fa-solid fa-location-dot-slash', style={'color': '#c83737'})
     ])
+    return accordion
 
 ############
 #          #
@@ -210,11 +217,10 @@ def generate_country_popup(country, current_year):
         children=[
             dbc.ModalHeader(dbc.ModalTitle(country_name)),
             html.Div(children=[
-                # dcc.Loading(id='map-loader', children=[
                     dl.Map(
-                        # dragging=False,
-                        # scrollWheelZoom=False,
-                        # zoomControl=False,
+                        dragging=False,
+                        scrollWheelZoom=False,
+                        zoomControl=False,
                         preferCanvas=True,
                         children=[
                             dl.TileLayer(), 
@@ -233,7 +239,7 @@ def generate_country_popup(country, current_year):
                         id="detailed-map"),
                     # ]),
                 html.Div(children=[
-                    dbc.Accordion(id='events-accordion', children=[create_event_accordion(event) for _,event in missing_events.iterrows()]),
+                    dbc.Accordion(id='events-accordion', children=[create_event_accordion(event, missing_events) for _,event in missing_events.iterrows()]),
                     html.Div(id='country-agg-data')
                 ], style={"flex-basis": '25vw', 'margin': '10px auto'}),
             ],
@@ -348,7 +354,8 @@ def country_slider_change(current_year,toggle_value,country):
     # update affected graph
     affected_fig = generate_affected_graph(current_year, toggle_value)
 
-    accordion_items = [create_event_accordion(event) for _,event in map_data.iterrows()]
+    missing_events = util.get_events_without_location(disaster_data[(disaster_data["Start Year"] == current_year) & (disaster_data["ISO"] == country_code)])
+    accordion_items = [create_event_accordion(event, missing_events) for _,event in pd.concat([missing_events,map_data], axis=0).iterrows()]
 
     # aggregate data
     number_of_deaths = map_data['Total Deaths'].sum()
