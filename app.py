@@ -44,41 +44,42 @@ map_legend = html.Div(children=[
                 geophysical_icon
             ]),
             dbc.Col(children=[
-                html.P("Geophysical", style={"display": "flex", "alignItems": "center", "marginBottom": "0"})
-            ], style={"display": "flex"}) 
+                html.P("Geophysical", className="map-legend-item-text")
+            ], className="map-legend-item") 
         ]),
         dbc.Row(children=[
             dbc.Col(children=[
                 meteorological_icon
             ]),
             dbc.Col(children=[
-                html.P("Meteorological", style={"display": "flex", "alignItems": "center", "marginBottom": "0"})
-            ], style={"display": "flex"})
+                html.P("Meteorological", className="map-legend-item-text")
+            ], className="map-legend-item")
         ]),
         dbc.Row(children=[
             dbc.Col(children=[
                 hydrological_icon
             ]),
             dbc.Col(children=[
-                html.P("Hydrological", style={"display": "flex", "alignItems": "center", "marginBottom": "0"})
-            ], style={"display": "flex"})
+                html.P("Hydrological", className="map-legend-item-text")
+            ], className="map-legend-item")
         ]),
         dbc.Row(children=[
             dbc.Col(children=[
                 climatological_icon
             ]),
             dbc.Col(children=[
-                html.P("Climatological", style={"display": "flex", "alignItems": "center", "marginBottom": "0"})
-            ], style={"display": "flex"})
+                html.P("Climatological", className="map-legend-item-text")
+            ], className="map-legend-item")
         ])
-    ], style={"padding": "1rem"})
-], style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000", "backgroundColor": "white", "borderRadius": "25px", "opacity": "0.75"})
+    ], className="map-legend-item-wrapper")
+], className="map-legend")
 
 map = dl.Map(
         maxBounds=[[-90,-180],[90,180]], 
         maxBoundsViscosity=1.0, 
         maxZoom=18, 
         minZoom=2, 
+        center=(40,-37),
         bounceAtZoomLimits=True, 
         children=[
             dl.TileLayer(), 
@@ -94,7 +95,7 @@ map = dl.Map(
                        options=dict(pointToLayer=ns("draw_marker"))),
             map_legend
             ],
-        style={"width": "100%", "height": "700px", "margin": "auto", "display": "block"}, 
+        style={"width": "100%", "height": "90%", "display": "block"},
         id="map")
 
 world_slider = dcc.Slider(min=1960, 
@@ -103,7 +104,8 @@ world_slider = dcc.Slider(min=1960,
                           value=1960, 
                           marks=None, 
                           tooltip={"placement": "bottom", "always_visible": True},
-                          id="world-year-slider")
+                          id="world-year-slider",
+                          className="slider")
 
 animation_button = dbc.Button(children=[
                                     "Play",
@@ -117,8 +119,8 @@ animation_button = dbc.Button(children=[
 
 animation_interval = dcc.Interval('animation-interval',interval=500,disabled=True)
 
-worldwide_events_distribution = dcc.Graph(id="worldwide-events-dist")
-worldwide_affected_graph = dcc.Graph(id="worldwide-affected-graph")
+worldwide_events_distribution = dcc.Graph(id="worldwide-events-dist", className="main-graphs")
+worldwide_affected_graph = dcc.Graph(id="worldwide-affected-graph", className="main-graphs")
 worldwide_toggle_buttons = html.Div(children=[
                                         dbc.RadioItems(
                                         id="worldwide-affected-buttons",
@@ -146,7 +148,7 @@ def generate_affected_graph(current_year, current_toggle):
     column = column_map[current_toggle]
     fig = px.line(affected_data, "Start Year", column, color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
     fig.update_traces(mode="markers+lines", hovertemplate=None)
-    fig.update_layout(hovermode="x unified")
+    fig.update_layout(hovermode="x unified", xaxis_title="Year")
     return fig
 
 def create_event_accordion(event):
@@ -174,13 +176,13 @@ app.layout = html.Div(children=[
                 dbc.Col(children=[
                     world_slider
                 ]),
-            ], className="g-0")
-        ])
-    ]),
+            ], className="g-0 slider-row")
+        ], className="map-column")
+    ], className="map-row"),
     dbc.Row(children=[
         dbc.Col(children=[
             worldwide_events_distribution
-        ], width=6),
+        ], className="graphs-column"),
         dbc.Col(children=[
             dbc.Row(children=[
                 dbc.Col(children=[
@@ -189,14 +191,14 @@ app.layout = html.Div(children=[
                 dbc.Col(children=[
                     worldwide_toggle_buttons
                 ])
-            ], className="g-0")
-        ], width=6)
-    ]),
+            ], className="g-0 graphs-row")
+        ], className="graphs-column")
+    ], className="graphs-row"),
     dbc.Row(children=[
         animation_interval,
         html.Div(id="popup")
     ])
-])
+], className="main-container")
 
 # app.layout = html.Div(children=[map, world_slider, animation_button, animation_interval, worldwide_events_distribution, worldwide_affected_graph, html.Div(id="popup")])
 
@@ -310,7 +312,7 @@ def worldwide_slider_change(current_year, current_toggle):
     map_data = util.filter_map_events(disaster_data, {"Start Year": current_year})
 
     # Update event distribution graph
-    event_count = map_data.groupby("Disaster Subgroup").count().reset_index()
+    event_count = disaster_data[disaster_data["Start Year"] == current_year].groupby("Disaster Subgroup").count().reset_index()
     event_count["colour"] = event_count["Disaster Subgroup"].map(EVENT_COLOURS)
     event_dist_fig = px.bar(event_count, x="Dis No", y="Disaster Subgroup", color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
     event_dist_fig.update_traces(hovertemplate="<br>".join([
@@ -318,9 +320,11 @@ def worldwide_slider_change(current_year, current_toggle):
         "Disasters: %{x}",
         "<extra></extra>"
     ]))
-    event_dist_fig.update_layout(hoverlabel=dict(
-        bgcolor="white"
-    ))
+    event_dist_fig.update_layout(
+        hoverlabel=dict(
+            bgcolor="white"
+        ),
+        xaxis_title="Disaster Count")
 
     # Update affected
     affected_fig = generate_affected_graph(current_year, current_toggle)

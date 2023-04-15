@@ -1,0 +1,67 @@
+.map-legend {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    background-color: white;
+    border-radius: 25px;
+    opacity: 0.75;
+}
+
+.map-legend-item-wrapper {
+    padding: 1rem;
+}
+
+.map-legend-item-text {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+.map-legend-item {
+    display: flex;
+}
+
+.map-row {
+    width: 100%;
+    height: 60vh;
+    margin: 0;
+}
+
+.map-column {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.graphs-row {
+    width: 100%;
+    height: 40vh;
+    margin: 0;
+}
+
+.graphs-column {
+    width: 50vw;
+}
+
+.slider-row {
+    height: 10%;
+    display: flex;
+    align-items: center;
+}
+
+.form-check {
+    padding-left: 0;
+}
+
+.radio-group {
+    margin-top: 3rem;
+}
+
+.main-graphs {
+    width: 100%;
+    height: 100%;
+}
+
+.slider {
+    padding-bottom: 0 !important;
+}
