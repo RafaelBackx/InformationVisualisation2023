@@ -24,6 +24,7 @@ gdp_data = pd.read_csv('./Data/gdp_data_constant.csv')
 map_data = util.filter_map_events(disaster_data, {"Start Year": 1960})
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app.config.suppress_callback_exceptions = True
 
 ################
 #              #
