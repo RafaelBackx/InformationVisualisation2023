@@ -150,8 +150,8 @@ worldwide_toggle_buttons = html.Div(children=[
 ], className="radio-group")
 
 
-def generate_affected_graph(current_year, current_toggle):
-    affected_data = disaster_data[disaster_data["Start Year"] <= current_year]
+def generate_affected_graph(df, current_year, current_toggle):
+    affected_data = df[df["Start Year"] <= current_year]
     affected_data = affected_data.groupby(
         ["Start Year", "Disaster Subgroup"], as_index=False).sum(numeric_only=True)
     column_map = {
@@ -415,7 +415,7 @@ def worldwide_slider_change(current_year, current_toggle):
         xaxis_title="Disaster Count")
 
     # Update affected
-    affected_fig = generate_affected_graph(current_year, current_toggle)
+    affected_fig = generate_affected_graph(disaster_data, current_year, current_toggle)
 
     return util.convert_events_to_geojson(map_data), event_dist_fig, affected_fig
 
@@ -440,7 +440,7 @@ def country_slider_change(current_year, toggle_value, country):
     gdp_fig = px.line(country_gdp_data, 'Start Year', 'share')
 
     # update affected graph
-    affected_fig = generate_affected_graph(current_year, toggle_value)
+    affected_fig = generate_affected_graph(data, current_year, toggle_value)
 
     missing_events = util.get_events_without_location(disaster_data[(
         disaster_data["Start Year"] == current_year) & (disaster_data["ISO"] == country_code)])
