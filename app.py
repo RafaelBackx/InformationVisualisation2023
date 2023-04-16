@@ -1,7 +1,7 @@
 import pandas as pd
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
-from dash import Dash, html, Input, Output, dcc, State
+from dash import Dash, html, Input, Output, dcc, State, ALL, dash
 from dash_extensions.javascript import arrow_function, assign, Namespace
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
@@ -151,13 +151,23 @@ def generate_affected_graph(current_year, current_toggle):
     fig.update_layout(hovermode="x unified", xaxis_title="Year")
     return fig
 
-def create_event_accordion(event):
-    return dbc.AccordionItem(title=f'{event["Disaster Type"]} ({util.get_property(event, "Event Name")})',
+def create_event_accordion(event, missing_events):
+    dis_no = event['Dis No']
+    missing_events_no = [e['Dis No'] for _, e in missing_events.iterrows()]
+    missing = dis_no in missing_events_no
+    accordion = dbc.AccordionItem(
+        item_id=f'{dis_no}',
+        title=f'{event["Disaster Type"]} ({util.get_property(event, "Event Name")})',
         children=[
             html.P(f'{event["Disaster Subgroup"]}/{event["Disaster Type"]}/{util.get_property(event, "Disaster Subsubtype")}'),
             html.P(util.get_date(event)),
-            html.P(f'{event["Region"]}')
+            html.P(f'{event["Region"]}'),
     ])
+    if (missing):
+        accordion.children.append(DashIconify(
+            icon="material-symbols:location-off-rounded"
+        ))
+    return accordion
 
 ############
 #          #
@@ -217,11 +227,10 @@ def generate_country_popup(country, current_year):
         children=[
             dbc.ModalHeader(dbc.ModalTitle(country_name)),
             html.Div(children=[
-                # dcc.Loading(id='map-loader', children=[
                     dl.Map(
-                        # dragging=False,
-                        # scrollWheelZoom=False,
-                        # zoomControl=False,
+                        dragging=False,
+                        scrollWheelZoom=False,
+                        zoomControl=False,
                         preferCanvas=True,
                         children=[
                             dl.TileLayer(), 
@@ -240,7 +249,7 @@ def generate_country_popup(country, current_year):
                         id="detailed-map"),
                     # ]),
                 html.Div(children=[
-                    dbc.Accordion(id='events-accordion', children=[create_event_accordion(event) for _,event in missing_events.iterrows()]),
+                    dbc.Accordion(id='events-accordion', children=[create_event_accordion(event, missing_events) for _,event in missing_events.iterrows()]),
                     html.Div(id='country-agg-data')
                 ], style={"flex-basis": '25vw', 'margin': '10px auto'}),
             ],
@@ -357,7 +366,8 @@ def country_slider_change(current_year,toggle_value,country):
     # update affected graph
     affected_fig = generate_affected_graph(current_year, toggle_value)
 
-    accordion_items = [create_event_accordion(event) for _,event in map_data.iterrows()]
+    missing_events = util.get_events_without_location(disaster_data[(disaster_data["Start Year"] == current_year) & (disaster_data["ISO"] == country_code)])
+    accordion_items = [create_event_accordion(event, missing_events) for _,event in pd.concat([missing_events,map_data], axis=0).iterrows()]
 
     # aggregate data
     number_of_deaths = map_data['Total Deaths'].sum()
@@ -368,3 +378,12 @@ def country_slider_change(current_year,toggle_value,country):
     aggr_data_html = [html.P(value) for value in aggr_data]
 
     return util.convert_events_to_geojson(map_data), gdp_fig, affected_fig, accordion_items, aggr_data_html
+
+@app.callback(Output('detailed-map', 'center'), Input('events-accordion','active_item'), State("countries", "click_feature"), prevent_initial_call=True)
+def event_click(event_id, data):
+    if (event_id):
+        event, loc = util.get_event(disaster_data,event_id)
+        return loc
+    else:
+        point = util.calculate_center(data)
+        return [point.y, point.x]
