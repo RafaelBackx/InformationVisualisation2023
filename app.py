@@ -16,6 +16,13 @@ EVENT_COLOURS = {
     "Climatological": "#FFEE00"
 }
 
+DISASTER_SUBGROUPS = [
+    "Geophysical",
+    "Hydrological",
+    "Climatological",
+    "Meteorological"
+]
+
 ns = Namespace("dashExtensions", "default")
 
 disaster_data = pd.read_csv(
@@ -151,9 +158,33 @@ worldwide_toggle_buttons = html.Div(children=[
 
 
 def generate_affected_graph(df, current_year, current_toggle):
-    affected_data = df[df["Start Year"] <= current_year]
+    affected_data = df[df["Start Year"] <= current_year][["Start Year", "Disaster Subgroup", "Total Deaths", "No Injured", "No Homeless"]]
+
+    missing_rows = {"Start Year": [], "Disaster Subgroup": [], "Total Deaths": [], "No Injured": [], "No Homeless": []}
+
+    for year in range(1960, current_year+1):
+        if year not in affected_data["Start Year"].values:
+            for dis_group in DISASTER_SUBGROUPS:
+                missing_rows["Start Year"].append(year)
+                missing_rows["Disaster Subgroup"].append(dis_group)
+                missing_rows["Total Deaths"].append(None)
+                missing_rows["No Injured"].append(None)
+                missing_rows["No Homeless"].append(None)
+        else:
+            for dis_group in DISASTER_SUBGROUPS:
+                if dis_group not in affected_data[affected_data["Start Year"] == year]["Disaster Subgroup"].values:
+                    missing_rows["Start Year"].append(year)
+                    missing_rows["Disaster Subgroup"].append(dis_group)
+                    missing_rows["Total Deaths"].append(None)
+                    missing_rows["No Injured"].append(None)
+                    missing_rows["No Homeless"].append(None)
+
+    if len(missing_rows["Start Year"]) != 0:
+        affected_data = pd.concat([pd.DataFrame(missing_rows), affected_data.loc[:]]).reset_index(drop=True)
+
     affected_data = affected_data.groupby(
         ["Start Year", "Disaster Subgroup"], as_index=False).sum(numeric_only=True)
+
     column_map = {
         'deaths': 'Total Deaths',
         'injuries': 'No Injured',
@@ -163,7 +194,7 @@ def generate_affected_graph(df, current_year, current_toggle):
     fig = px.line(affected_data, "Start Year", column,
                   color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
     fig.update_traces(mode="markers+lines", hovertemplate=None)
-    fig.update_layout(hovermode="x unified", xaxis_title="Year")
+    fig.update_layout(hovermode="x unified", xaxis_title="Year", xaxis=dict(tickformat="d"))
     return fig
 
 
@@ -397,9 +428,20 @@ def worldwide_slider_change(current_year, current_toggle):
     map_data = util.filter_map_events(
         disaster_data, {"Start Year": current_year})
 
+    year_data = disaster_data[disaster_data["Start Year"] == current_year][["Start Year", "Disaster Subgroup", "Dis No"]]
+
+    missing_rows = pd.DataFrame({"Start Year": [], "Disaster Subgroup": [], "Dis No": []})
+
+    for dis_group in DISASTER_SUBGROUPS:
+        if dis_group not in year_data["Disaster Subgroup"].values:
+            missing_rows[["Start Year", "Disaster Subgroup", "Dis No"]] = [[current_year, dis_group, None]]
+
+    if not missing_rows.empty:
+        year_data = pd.concat([missing_rows, year_data.loc[:]]).reset_index(drop=True)
+
     # Update event distribution graph
-    event_count = disaster_data[disaster_data["Start Year"] == current_year].groupby(
-        "Disaster Subgroup").count().reset_index()
+    event_count = year_data.groupby(
+        "Disaster Subgroup", as_index=False).count()
     event_count["colour"] = event_count["Disaster Subgroup"].map(EVENT_COLOURS)
     event_dist_fig = px.bar(event_count, x="Dis No", y="Disaster Subgroup",
                             color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
@@ -431,16 +473,20 @@ def worldwide_slider_change(current_year, current_toggle):
 def country_slider_change(current_year, toggle_value, country):
     country_code = country["properties"]["ISO_A3"]
     data = util.filter_map_events(disaster_data, {'ISO': country_code})
+
+    # update affected graph
+    affected_fig = generate_affected_graph(disaster_data[disaster_data["ISO"] == country_code], current_year, toggle_value)
+
     # Update map
     map_data = util.filter_map_events(data, {"Start Year": current_year})
+
     # update graphs gpd graph
     years = list(range(1960, current_year+1))
     country_gdp_data = util.get_gdp_data(
         gdp_data, data[data["Start Year"] <= current_year], years, country_code)
     gdp_fig = px.line(country_gdp_data, 'Start Year', 'share')
-
-    # update affected graph
-    affected_fig = generate_affected_graph(data, current_year, toggle_value)
+    gdp_fig.update_traces(mode="markers+lines", hovertemplate=None)
+    gdp_fig.update_layout(hovermode="x unified", xaxis_title="Year", xaxis=dict(tickformat="d"))
 
     missing_events = util.get_events_without_location(disaster_data[(
         disaster_data["Start Year"] == current_year) & (disaster_data["ISO"] == country_code)])

@@ -26,6 +26,7 @@
     width: 100%;
     height: 60vh;
     margin: 0;
+    z-index: 1000;
 }
 
 .map-column {
@@ -42,7 +43,6 @@
 
 .graphs-column {
     width: 50vw;
-    z-index: -1000;
 }
 
 .slider-row {
@@ -74,13 +74,8 @@
     padding-left: 0;
 }
 
-.popup-graphs {
-    z-index: 1000 !important;
-}
-
 .popup-map-row {
     height: 40vh !important;
-    z-index: 1001;
 }
 
 .events-accordion {
@@ -105,6 +100,12 @@
 .events-column-popup {
     overflow-y: auto;
     max-height: 100% ;
+}
+
+.rc-slider-tooltip-inner {
+    padding: 2px 2px !important;
+    height: 15px !important;
+    border-radius: 4px !important;
 }
 
 ::-webkit-scrollbar {
