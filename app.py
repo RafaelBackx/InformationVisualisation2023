@@ -1,7 +1,7 @@
 import pandas as pd
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
-from dash import Dash, html, Input, Output, dcc, State
+from dash import Dash, html, Input, Output, dcc, State, ALL, dash
 from dash_extensions.javascript import arrow_function, assign, Namespace
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
@@ -156,14 +156,17 @@ def create_event_accordion(event, missing_events):
     missing_events_no = [e['Dis No'] for _, e in missing_events.iterrows()]
     missing = dis_no in missing_events_no
     accordion = dbc.AccordionItem(
+        item_id=f'{dis_no}',
         title=f'{event["Disaster Type"]} ({util.get_property(event, "Event Name")})',
         children=[
             html.P(f'{event["Disaster Subgroup"]}/{event["Disaster Type"]}/{util.get_property(event, "Disaster Subsubtype")}'),
             html.P(util.get_date(event)),
             html.P(f'{event["Region"]}'),
-            html.P(f'{missing}') #TODO add icon
-            # html.I(className='fa-solid fa-location-dot-slash', style={'color': '#c83737'})
     ])
+    if (missing):
+        accordion.children.append(DashIconify(
+            icon="material-symbols:location-off-rounded"
+        ))
     return accordion
 
 ############
@@ -370,3 +373,12 @@ def country_slider_change(current_year,toggle_value,country):
     aggr_data_html = [html.P(value) for value in aggr_data]
 
     return util.convert_events_to_geojson(map_data), gdp_fig, affected_fig, accordion_items, aggr_data_html
+
+@app.callback(Output('detailed-map', 'center'), Input('events-accordion','active_item'), State("countries", "click_feature"), prevent_initial_call=True)
+def event_click(event_id, data):
+    if (event_id):
+        event, loc = util.get_event(disaster_data,event_id)
+        return loc
+    else:
+        point = util.calculate_center(data)
+        return [point.y, point.x]

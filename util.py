@@ -1,6 +1,7 @@
 import pandas as pd
 from pandas_geojson import to_geojson
 from shapely.geometry import shape
+import shapely
 import json
 
 def filter_map_events(df, filters, location=False):
@@ -37,8 +38,6 @@ def get_gdp_data(df_gdp : pd.DataFrame,df_disaster : pd.DataFrame,years,country)
         data_by_year['share'] = data_by_year.apply(calculate_gdp_share,axis=1)
         return data_by_year
 
-
-
 def convert_events_to_geojson(df):
     geojson = to_geojson(df=df, lat="Latitude", lon="Longitude", properties=["Dis No", "Disaster Subgroup"]) # More things can be included in the properties when it's needed
     for event in geojson["features"]:
@@ -69,3 +68,17 @@ def get_date(event):
     if (pd.isna(day)):
         return f'{int(year)}-{int(month)}'
     return f'{int(year)}-{int(month)}-{int(day)}'
+
+def get_event(df: pd.DataFrame, event_id):
+    event = df[df['Dis No'] == event_id].iloc[0]
+    lat = event['Latitude']
+    long = event['Longitude']
+    if (pd.isna(lat) or pd.isna(long)):
+        return event, None
+    else:
+        return event, [lat,long]
+
+def calculate_center(data):
+    shapely_geos = shapely.from_geojson(json.dumps(data))
+    center = shapely_geos.centroid
+    return center
