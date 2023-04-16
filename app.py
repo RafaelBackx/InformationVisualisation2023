@@ -177,7 +177,12 @@ app.layout = html.Div(children=[
                     world_slider
                 ]),
             ], className="g-0 slider-row")
-        ], className="map-column")
+        ], className="map-column", width=9),
+        dbc.Col(children=[
+            html.Div(children=[
+                "Replace this with events accordion"
+            ])
+        ], className="events-column", width=3)
     ], className="map-row"),
     dbc.Row(children=[
         dbc.Col(children=[

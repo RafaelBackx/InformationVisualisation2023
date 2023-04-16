@@ -31,6 +31,7 @@
 .map-column {
     padding-left: 0;
     padding-right: 0;
+    width: 70vw;
 }
 
 .graphs-row {
@@ -41,6 +42,7 @@
 
 .graphs-column {
     width: 50vw;
+    z-index: -1000;
 }
 
 .slider-row {
@@ -64,4 +66,9 @@
 
 .slider {
     padding-bottom: 0 !important;
+}
+
+.events-column {
+    width: 30vw;
+    padding-right: 0;
 }
