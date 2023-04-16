@@ -71,4 +71,54 @@
 .events-column {
     width: 30vw;
     padding-right: 0;
+    padding-left: 0;
+}
+
+.popup-graphs {
+    z-index: 1000 !important;
+}
+
+.popup-map-row {
+    height: 40vh !important;
+    z-index: 1001;
+}
+
+.events-accordion {
+    margin: 0 !important;
+}
+
+.aggregated-data {
+    margin: 0 !important;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 12px;
+}
+
+.card {
+    padding: 0 !important;
+}
+
+.map-column-popup {
+    max-height: 100%;
+}
+
+.events-column-popup {
+    overflow-y: auto;
+    max-height: 100% ;
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    border-radius: 8px;
+    background-color: #e7e7e7;
+    border: 1px solid #cacaca;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    background-color: #363636;
 }

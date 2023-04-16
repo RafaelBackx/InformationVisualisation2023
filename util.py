@@ -4,25 +4,29 @@ from shapely.geometry import shape
 import shapely
 import json
 
+
 def filter_map_events(df, filters, location=False):
     data = df[df["Latitude"].notnull() & df["Longitude"].notnull()]
     for filter in filters:
         data = data[data[filter] == filters[filter]]
     return data
 
+
 def get_events_without_location(df: pd.DataFrame):
-    data = df[df['Latitude'].isnull() &df['Longitude'].isnull()]
+    data = df[df['Latitude'].isnull() & df['Longitude'].isnull()]
     return data
 
-def get_gdp_data(df_gdp : pd.DataFrame,df_disaster : pd.DataFrame,years,country):
+
+def get_gdp_data(df_gdp: pd.DataFrame, df_disaster: pd.DataFrame, years, country):
     columns = years + ['Country Code']
     columns = [str(c) for c in columns]
     year_data = df_gdp[columns]
-    data : pd.DataFrame = year_data[year_data['Country Code'] == country]
+    data: pd.DataFrame = year_data[year_data['Country Code'] == country]
     data = data[[str(y) for y in years]]
     data = data.transpose()
 
-    data_by_year = df_disaster.groupby('Start Year', as_index=False).sum(numeric_only=True)
+    data_by_year = df_disaster.groupby(
+        'Start Year', as_index=False).sum(numeric_only=True)
 
     def calculate_gdp_share(row):
         year = row['Start Year']
@@ -35,29 +39,37 @@ def get_gdp_data(df_gdp : pd.DataFrame,df_disaster : pd.DataFrame,years,country)
         data_by_year["share"] = 0
         return data_by_year
     else:
-        data_by_year['share'] = data_by_year.apply(calculate_gdp_share,axis=1)
+        data_by_year['share'] = data_by_year.apply(calculate_gdp_share, axis=1)
         return data_by_year
 
+
 def convert_events_to_geojson(df):
-    geojson = to_geojson(df=df, lat="Latitude", lon="Longitude", properties=["Dis No", "Disaster Subgroup"]) # More things can be included in the properties when it's needed
+    geojson = to_geojson(df=df, lat="Latitude", lon="Longitude", properties=[
+                         "Dis No", "Disaster Subgroup"])  # More things can be included in the properties when it's needed
     for event in geojson["features"]:
-        event["properties"]["tooltip"] = df[df["Dis No"] == event["properties"]["Dis No"]]["Disaster Type"].values[0]
+        event["properties"]["tooltip"] = df[df["Dis No"] ==
+                                            event["properties"]["Dis No"]]["Disaster Type"].values[0]
     return geojson
+
 
 def __get_geojson_data(filename):
     file = open(f'./Data/GeoJson1/{filename}', encoding='utf-8')
     geojson = json.load(file)
     return geojson
 
+
 def get_world_geojson():
     return __get_geojson_data('countries.json')
+
 
 def get_country_data(country_code):
     return __get_geojson_data(f'{country_code}.json_opt.json')
 
+
 def get_property(event, property):
     name = event[property]
     return name if pd.notna(name) else ''
+
 
 def get_date(event):
     year = event["Start Year"]
@@ -69,6 +81,7 @@ def get_date(event):
         return f'{int(year)}-{int(month)}'
     return f'{int(year)}-{int(month)}-{int(day)}'
 
+
 def get_event(df: pd.DataFrame, event_id):
     event = df[df['Dis No'] == event_id].iloc[0]
     lat = event['Latitude']
@@ -76,7 +89,8 @@ def get_event(df: pd.DataFrame, event_id):
     if (pd.isna(lat) or pd.isna(long)):
         return event, None
     else:
-        return event, [lat,long]
+        return event, [lat, long]
+
 
 def calculate_center(data):
     shapely_geos = shapely.from_geojson(json.dumps(data))
