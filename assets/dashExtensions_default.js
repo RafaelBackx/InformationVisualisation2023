@@ -14,5 +14,16 @@ window.dashExtensions = Object.assign({}, window.dashExtensions, {
             });
             return L.marker(latlng, {icon: event})
         },
+        draw_polygon: function(feature,context){
+            console.log('hello from draw_polygon')
+            let state = feature['properties']['ISO_1'];
+            console.log(state);
+            let colour_map = context.props.hideout;
+            if (colour_map != undefined){
+                let colour = colour_map[state]
+                console.log(colour);
+                return {weight: 5, color: colour, dashArray: ''};
+            }
+        }
     }
 });

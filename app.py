@@ -8,6 +8,7 @@ from dash_iconify import DashIconify
 import plotly.express as px
 import util
 from server import app, server
+from time import sleep
 
 EVENT_COLOURS = {
     "Meteorological": "#ABA4A4",
@@ -156,6 +157,7 @@ worldwide_toggle_buttons = html.Div(children=[
         value='deaths'),
 ], className="radio-group")
 
+world_events_accordion = dbc.Accordion(id="world-events-accordion")
 
 def generate_affected_graph(df, current_year, current_toggle):
     affected_data = df[df["Start Year"] <= current_year][["Start Year", "Disaster Subgroup", "Total Deaths", "No Injured", "No Homeless"]]
@@ -239,9 +241,9 @@ app.layout = html.Div(children=[
         ], className="map-column", width=9),
         dbc.Col(children=[
             html.Div(children=[
-                "Replace this with events accordion"
-            ])
-        ], className="events-column", width=3)
+                world_events_accordion
+            ], className="events-accordion")
+        ], className="events-column events-column-popup", width=3)
     ], className="map-row"),
     dbc.Row(children=[
         dbc.Col(children=[
@@ -265,7 +267,6 @@ app.layout = html.Div(children=[
 ], className="main-container")
 
 # app.layout = html.Div(children=[map, world_slider, animation_button, animation_interval, worldwide_events_distribution, worldwide_affected_graph, html.Div(id="popup")])
-
 
 def generate_country_popup(country, current_year):
     country_name = country["properties"]["ADMIN"]
@@ -465,7 +466,6 @@ def worldwide_slider_change(current_year, current_toggle):
 @app.callback([Output('country-events', 'data'),
                Output('gdp-graph', 'figure'),
                Output('affected-graph', 'figure'),
-               Output('events-accordion', 'children'),
                Output('country-agg-data', 'children')],
               [Input('country-year-slider', 'value'),
                Input('graph-toggle-buttons', 'value')],
@@ -504,12 +504,31 @@ def country_slider_change(current_year, toggle_value, country):
 
     return util.convert_events_to_geojson(map_data), gdp_fig, affected_fig, accordion_items, aggr_data_html
 
+@app.callback(Output('world-events-accordion', 'children'),Input('world-year-slider', 'value'), prevent_initial_call=True)
+def slider_create_accordion_events(slider_value):
+    missing_events = util.get_events_without_location(disaster_data[disaster_data["Start Year"] == slider_value])
+    df = pd.concat([missing_events,map_data], axis=0)
+    children = []
+    for _,event in df.iterrows():
+        children.append(create_event_accordion(event,missing_events))
+    accordion_items = [create_event_accordion(event, missing_events) for _, event in pd.concat([
+        missing_events, map_data], axis=0).iterrows()]
+    print(len(accordion_items))
+    return accordion_items
 
 @app.callback(Output('detailed-map', 'center'), Input('events-accordion', 'active_item'), State("countries", "click_feature"), prevent_initial_call=True)
-def event_click(event_id, data):
+def country_event_click(event_id, data):
     if (event_id):
         event, loc = util.get_event(disaster_data, event_id)
         return loc
     else:
         point = util.calculate_center(data)
         return [point.y, point.x]
+
+@app.callback(Output('map', 'center'), Input("world-events-accordion", 'active_item'), prevent_initial_call=True)
+def world_event_click(event_id):
+    if (event_id):
+        event, loc = util.get_event(disaster_data, event_id)
+        return loc
+    else:
+        return (40, -37)

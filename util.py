@@ -3,9 +3,13 @@ from pandas_geojson import to_geojson
 from shapely.geometry import shape
 import shapely
 import json
+from geopy.geocoders import Nominatim
+import zipcodes
+from data import abbrev_to_us_state, us_state_to_abbrev
 
+geolocator = Nominatim(user_agent='geoapiExercises')
 
-def filter_map_events(df, filters, location=False):
+def filter_map_events(df, filters):
     data = df[df["Latitude"].notnull() & df["Longitude"].notnull()]
     for filter in filters:
         data = data[data[filter] == filters[filter]]
@@ -84,6 +88,7 @@ def get_date(event):
 
 def get_event(df: pd.DataFrame, event_id):
     event = df[df['Dis No'] == event_id].iloc[0]
+    print(f'event: {event}')
     lat = event['Latitude']
     long = event['Longitude']
     if (pd.isna(lat) or pd.isna(long)):
@@ -96,3 +101,20 @@ def calculate_center(data):
     shapely_geos = shapely.from_geojson(json.dumps(data))
     center = shapely_geos.centroid
     return center
+
+def lat_long_to_state(lat,long):
+    try:
+        location = geolocator.reverse(f'{lat}, {long}')
+    except:
+        return None
+    if (not location):
+        return None
+    address = location.raw['address']
+    zip_code = address.get('postcode')
+    state = address.get('state')
+    if (state):
+        return state
+    if (not zip_code):
+        return None
+    abrev = zipcodes.matching(f'{zip_code}')[0]['state']
+    return abbrev_to_us_state[abrev]
