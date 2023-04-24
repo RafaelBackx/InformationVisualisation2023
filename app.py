@@ -2,11 +2,14 @@ import pandas as pd
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, dcc, State, ALL, dash
-from dash_extensions.javascript import arrow_function, assign, Namespace
+from dash_extensions.javascript import arrow_function, Namespace
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 import plotly.express as px
+
 import util
+import components
+
 from server import app, server
 from time import sleep
 
@@ -30,7 +33,7 @@ disaster_data = pd.read_csv(
     "Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
 gdp_data = pd.read_csv('./Data/gdp_data_constant.csv')
 
-map_data = util.filter_map_events(disaster_data, {"Start Year": 1960})
+map_data = util.filter_events(disaster_data, {"Start Year": 1960}, True)
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.config.suppress_callback_exceptions = True
@@ -87,6 +90,45 @@ map_legend = html.Div(children=[
     ], className="map-legend-item-wrapper")
 ], className="map-legend")
 
+world_slider = dcc.Slider(min=1960,
+                          max=2023,
+                          step=1,
+                          value=1960,
+                          marks=None,
+                          tooltip={"placement": "bottom",
+                                   "always_visible": True},
+                          id="world-year-slider",
+                          className="slider")
+
+show_events_button = dbc.Button(
+    "Show all events", color="primary", className="me-1 show-events", id="world-show-events")
+
+animation_button = dbc.Button(children=[
+    "Play",
+    DashIconify(
+        icon="material-symbols:play-arrow-rounded"
+    )
+],
+    color="success",
+    class_name="me-1",
+    id="world-animation-button")
+
+world_slider_wrapper = dbc.Row(
+    children=[
+        dbc.Col(
+            children=[
+                animation_button
+            ],
+            className="column",
+            width="auto"),
+        dbc.Col(
+            children=[
+                world_slider
+            ],
+            className="column")
+    ], className="slider-container"
+)
+
 map = dl.Map(
     maxBounds=[[-90, -180], [90, 180]],
     maxBoundsViscosity=1.0,
@@ -107,97 +149,19 @@ map = dl.Map(
         dl.GeoJSON(data=util.convert_events_to_geojson(map_data),
                    id="events",
                    options=dict(pointToLayer=ns("draw_marker"))),
-        map_legend
+        map_legend,
+        world_slider_wrapper
     ],
-    style={"width": "100%", "height": "90%", "display": "block"},
+    style={"width": "100%", "height": "100%", "display": "block"},
     id="map")
-
-world_slider = dcc.Slider(min=1960,
-                          max=2023,
-                          step=1,
-                          value=1960,
-                          marks=None,
-                          tooltip={"placement": "bottom",
-                                   "always_visible": True},
-                          id="world-year-slider",
-                          className="slider")
-
-animation_button = dbc.Button(children=[
-    "Play",
-    DashIconify(
-        icon="material-symbols:play-arrow-rounded"
-    )
-],
-    color="success",
-    class_name="me-1",
-    id="animation-button")
 
 animation_interval = dcc.Interval(
     'animation-interval', interval=500, disabled=True)
 
-worldwide_events_distribution = dcc.Graph(
-    id="worldwide-events-dist", className="main-graphs")
-worldwide_affected_graph = dcc.Graph(
-    id="worldwide-affected-graph", className="main-graphs")
-worldwide_toggle_buttons = html.Div(children=[
-    dbc.RadioItems(
-        id="worldwide-affected-buttons",
-        style={"display": "flex", "flexDirection": "column"},
-        className="btn-group",
-        inputClassName="btn-check",
-        labelClassName="btn btn-outline-primary",
-        labelCheckedClassName="active",
-        options=[
-            {"label": "Deaths", "value": 'deaths'},
-            {"label": "Injuries",
-             "value": 'injuries'},
-            {"label": "Homeless",
-             "value": 'homeless'},
-        ],
-        value='deaths'),
-], className="radio-group")
-
-world_events_accordion = dbc.Accordion(id="world-events-accordion")
-
-def generate_affected_graph(df, current_year, current_toggle):
-    affected_data = df[df["Start Year"] <= current_year][["Start Year", "Disaster Subgroup", "Total Deaths", "No Injured", "No Homeless"]]
-
-    missing_rows = {"Start Year": [], "Disaster Subgroup": [], "Total Deaths": [], "No Injured": [], "No Homeless": []}
-
-    for year in range(1960, current_year+1):
-        if year not in affected_data["Start Year"].values:
-            for dis_group in DISASTER_SUBGROUPS:
-                missing_rows["Start Year"].append(year)
-                missing_rows["Disaster Subgroup"].append(dis_group)
-                missing_rows["Total Deaths"].append(None)
-                missing_rows["No Injured"].append(None)
-                missing_rows["No Homeless"].append(None)
-        else:
-            for dis_group in DISASTER_SUBGROUPS:
-                if dis_group not in affected_data[affected_data["Start Year"] == year]["Disaster Subgroup"].values:
-                    missing_rows["Start Year"].append(year)
-                    missing_rows["Disaster Subgroup"].append(dis_group)
-                    missing_rows["Total Deaths"].append(None)
-                    missing_rows["No Injured"].append(None)
-                    missing_rows["No Homeless"].append(None)
-
-    if len(missing_rows["Start Year"]) != 0:
-        affected_data = pd.concat([pd.DataFrame(missing_rows), affected_data.loc[:]]).reset_index(drop=True)
-
-    affected_data = affected_data.groupby(
-        ["Start Year", "Disaster Subgroup"], as_index=False).sum(numeric_only=True)
-
-    column_map = {
-        'deaths': 'Total Deaths',
-        'injuries': 'No Injured',
-        'homeless': 'No Homeless'
-    }
-    column = column_map[current_toggle]
-    fig = px.line(affected_data, "Start Year", column,
-                  color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
-    fig.update_traces(mode="markers+lines", hovertemplate=None)
-    fig.update_layout(hovermode="x unified", xaxis_title="Year", xaxis=dict(tickformat="d"))
-    return fig
+world_gdp_graph = dcc.Graph(
+    id="world-gdp-graph", style={"height": "30vh", "width": "100%"})
+world_affected_graph = dcc.Graph(
+    id="world-affected-graph", style={"height": "30vh", "width": "100%"})
 
 
 def create_event_accordion(event, missing_events):
@@ -219,169 +183,150 @@ def create_event_accordion(event, missing_events):
         ))
     return accordion
 
+
+tabs = dbc.Tabs(
+    children=[
+        dbc.Tab(label="Home", tab_id="home"),
+        dbc.Tab(label="U.S. Preventions", tab_id="us-prevention")
+    ],
+    id="tabs",
+    active_tab="home")
+
 ############
 #          #
 #  LAYOUT  #
 #          #
 ############
 
+app.layout = html.Div(
+    children=[
+        tabs,
+        html.Div(id="content"),
+        html.Div(
+            children=[
+                animation_interval,
+                html.Div(id="popup"),
+                html.Div(
+                    children=[
+                        dbc.Offcanvas(
+                            children=[
 
-app.layout = html.Div(children=[
-    dbc.Row(children=[
-        dbc.Col(children=[
-            map,
-            dbc.Row(children=[
-                dbc.Col(children=[
-                    animation_button
-                ], width="auto"),
-                dbc.Col(children=[
-                    world_slider
-                ]),
-            ], className="g-0 slider-row")
-        ], className="map-column", width=9),
-        dbc.Col(children=[
-            html.Div(children=[
-                world_events_accordion
-            ], className="events-accordion")
-        ], className="events-column events-column-popup", width=3)
-    ], className="map-row"),
-    dbc.Row(children=[
-        dbc.Col(children=[
-            worldwide_events_distribution
-        ], className="graphs-column"),
-        dbc.Col(children=[
-            dbc.Row(children=[
-                dbc.Col(children=[
-                    worldwide_affected_graph
-                ], width=9),
-                dbc.Col(children=[
-                    worldwide_toggle_buttons
-                ])
-            ], className="g-0 graphs-row")
-        ], className="graphs-column")
-    ], className="graphs-row"),
-    dbc.Row(children=[
-        animation_interval,
-        html.Div(id="popup")
-    ])
-], className="main-container")
+                            ],
+                            is_open=False,
+                            placement="end",
+                            id="world-offcanvas"
+                        )
+                    ]
+                )
+            ]
+        )
+    ]
+)
 
-# app.layout = html.Div(children=[map, world_slider, animation_button, animation_interval, worldwide_events_distribution, worldwide_affected_graph, html.Div(id="popup")])
-
-def generate_country_popup(country, current_year):
-    country_name = country["properties"]["ADMIN"]
-    # Can be useful to do lookups
-    country_iso = country["properties"]["ISO_A3"]
-    country_data = util.filter_map_events(
-        disaster_data, {"ISO": country_iso, "Start Year": current_year})
-    missing_events = util.get_events_without_location(country_data)
-    country_map = dl.Map(
-        dragging=False,
-        scrollWheelZoom=False,
-        zoomControl=False,
-        preferCanvas=True,
-        children=[
-            dl.TileLayer(),
-            # https://datahub.io/core/geo-countries#resource-countries
-            dl.GeoJSON(
-                data=util.get_country_data(country_iso),
-                id="country",
-                # Invisible polygons,
-                options={"style": {"color": "#123456"}},
-                zoomToBounds=True,
-                hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))),  # Gray border on hover (line_thickness, color, line_style)
-            dl.GeoJSON(data=util.convert_events_to_geojson(country_data),  # Only show events of country
-                       id="country-events",
-                       options=dict(pointToLayer=ns("draw_marker"))),
-            map_legend
-        ],
-        style={"width": "100%", "height": "90%", "display": "block"},
-        id="detailed-map")
-
-    events_accordion = dbc.Accordion(id='events-accordion', children=[create_event_accordion(
-        event, missing_events) for _, event in missing_events.iterrows()])
-
-    aggregated_country_data_card = dbc.Card(
-        children=[
-            dbc.CardHeader(children=["Aggregated data"]),
-            dbc.CardBody(children=[
-                html.Div(id='country-agg-data')
-            ])
-        ]
-    )
-
-    country_slider = dcc.Slider(min=1960, max=2023, step=1, value=current_year, marks=None, tooltip={
-                                'placement': 'bottom', 'always_visible': True}, id='country-year-slider', className="slider")
-
-    gdp_graph = dcc.Graph(id='gdp-graph')
-
-    country_affected_graph = dcc.Graph(id='affected-graph')
-
-    country_toggle_buttons = html.Div(children=[
-        dbc.RadioItems(
-            id="graph-toggle-buttons",
-            className="btn-group",
-            inputClassName="btn-check",
-            labelClassName="btn btn-outline-primary",
-            style={"display": "flex",
-                   "flexDirection": "column"},
-            labelCheckedClassName="active",
-            options=[
-                {"label": "Deaths", "value": 'deaths'},
-                {"label": "Injuries",
-                 "value": 'injuries'},
-                {"label": "Homeless",
-                 "value": 'homeless'},
+home_layout = html.Div(
+    children=[
+        dbc.Row(
+            children=[
+                dbc.Col(
+                    children=[
+                        dbc.Card(
+                            children=[
+                                dbc.CardHeader(
+                                    children=[
+                                        "World Map"
+                                    ]
+                                ),
+                                dbc.CardBody(
+                                    children=[
+                                        map
+                                    ]
+                                )
+                            ],
+                            className="map-card")
+                    ],
+                    width=9,
+                    className="column map-column"),
+                dbc.Col(
+                    children=[
+                        dbc.Card(
+                            children=[
+                                dbc.CardHeader(
+                                    children=[
+                                        "Aggregated Data"
+                                    ]
+                                ),
+                                dbc.CardBody(
+                                    children=[
+                                        html.Div(
+                                            id="world-aggregated-data"),
+                                        show_events_button
+                                    ]
+                                )
+                            ],
+                            className="aggregated-card")
+                    ],
+                    width=3,
+                    className="column aggregated-column")
             ],
-            value='deaths',
+            className="map-row"
         ),
+        dbc.Row(
+            children=[
+                dbc.Col(
+                    children=[
+                        dbc.Card(
+                            children=[
+                                dbc.CardHeader(
+                                    children=[
+                                        "GDP Data"
+                                    ]
+                                ),
+                                dbc.CardBody(
+                                    children=[
+                                        world_gdp_graph
+                                    ],
+                                    className="gdp-cardbody")
+                            ],
+                            className="gdp-card")
+                    ],
+                    width=6,
+                    className="column gdp-column"),
+                dbc.Col(
+                    children=[
+                        dbc.Card(
+                            children=[
+                                dbc.CardHeader(
+                                    children=[
+                                        "Affected Data"
+                                    ]
+                                ),
+                                dbc.CardBody(
+                                    children=[
+                                        dbc.Tabs(
+                                            children=[
+                                                dbc.Tab(
+                                                    label="Total Deaths", tab_id="deaths"),
+                                                dbc.Tab(
+                                                    label="Total Injured", tab_id="injuries"),
+                                                dbc.Tab(
+                                                    label="Total Homeless", tab_id="homeless")
+                                            ],
+                                            id="world-affected-tabs",
+                                            active_tab="deaths"
+                                        ),
+                                        world_affected_graph
+                                    ]
+                                )
+                            ],
+                            className="affected-card")
+                    ],
+                    width=6,
+                    className="column affected-column")
+            ],
+            className="graphs-row")
     ],
-        className="radio-group",
-    )
-
-    popup = dbc.Modal(children=[
-        dbc.ModalHeader(dbc.ModalTitle(country_name)),
-        dbc.Row(children=[
-                dbc.Col(children=[
-                    country_map,
-                    dbc.Row(children=[
-                        # dbc.Col(children=[
-                        #     animation_button
-                        # ], width="auto"),
-                        dbc.Col(children=[
-                            country_slider
-                        ]),
-                    ], className="g-0 slider-row")
-                ], className="map-column map-column-popup", width=9),
-                dbc.Col(children=[
-                    dbc.Row(children=[
-                        aggregated_country_data_card
-                    ], className="aggregated-data"),
-                    dbc.Row(children=[
-                        events_accordion
-                    ], className="events-accordion"),
-                ], className="events-column events-column-popup", width=3)
-                ], className="map-row popup-map-row"),
-        dbc.Row(children=[
-                dbc.Col(children=[
-                    gdp_graph
-                ], className="graphs-column popup-graphs"),
-                dbc.Col(children=[
-                    dbc.Row(children=[
-                        dbc.Col(children=[
-                            country_affected_graph
-                        ], width=9),
-                        dbc.Col(children=[
-                            country_toggle_buttons
-                        ])
-                    ], className="g-0 graphs-row")
-                ], className="graphs-column popup-graphs")
-                ], className="graphs-row")
-    ],
-        id=f"{country_iso}-modal",
-        fullscreen=True,
-        is_open=True)
-    return popup
+    id="home"
+)
 
 ###############
 #             #
@@ -389,18 +334,50 @@ def generate_country_popup(country, current_year):
 #             #
 ###############
 
+
+@app.callback([Output("world-offcanvas", "children"), Output("world-offcanvas", "is_open")], [Input("world-show-events", "n_clicks")], [State("world-offcanvas", "is_open")])
+def show_events(n_clicks, io):
+    if n_clicks:
+        is_open = not io
+    else:
+        is_open = io
+    return "Blablabla", is_open
+
+
+@app.callback([Output("country-offcanvas", "children"), Output("country-offcanvas", "is_open")], [Input("country-show-events", "n_clicks")], [State("country-offcanvas", "is_open")])
+def show_events(n_clicks, io):
+    if n_clicks:
+        is_open = not io
+    else:
+        is_open = io
+    return "Blablabla", is_open
+
+
+@app.callback(Output("content", "children"), [Input("tabs", "active_tab")])
+def navigate_tabs(active_tab):
+    if active_tab == "home":
+        return home_layout
+    elif active_tab == "us-prevention":
+        pass
+
+
+@app.callback(Output("world-affected", "children"), [Input("world-affected-tabs", "active_tab"), Input('world-year-slider', 'value')])
+def change_affected_filter(active_tab, current_year):
+    affected_data = disaster_data[disaster_data["Start Year"] <= current_year]
+    return components.generate_affected_graph(affected_data, active_tab)
+
 # Open popup when click on country
 
 
 @app.callback(Output("popup", "children"), [Input('countries', 'n_clicks')], [State("countries", "click_feature"), State("world-year-slider", "value")], prevent_initial_call=True)
 def country_click(_n_clicks, feature, current_year):
     if feature is not None:
-       # disable the interval because otherwise it draws on the other map
-       return generate_country_popup(feature, current_year)
+        # disable the interval because otherwise it draws on the other map
+        return components.generate_country_popup(disaster_data, feature, current_year)
 
 
 @app.callback(Output('animation-interval', 'disabled'),
-              Input('animation-button', 'n_clicks'),
+              Input('world-animation-button', 'n_clicks'),
               State('animation-interval', 'disabled'), prevent_initial_call=True)
 def animate_slider(n_clicks, animation_status):
     return not animation_status
@@ -420,25 +397,33 @@ def update_slider(_n_clicks, current_slider_value, max, min):
 
 
 @app.callback(Output('events', 'data'),
-              Output('worldwide-events-dist', 'figure'),
-              Output('worldwide-affected-graph', 'figure'),
+              Output('world-gdp-graph', 'figure'),
+              Output('world-affected-graph', 'figure'),
+              Output("world-aggregated-data", "children"),
               [Input('world-year-slider', 'value'),
-               Input('worldwide-affected-buttons', 'value')])
+               Input("world-affected-tabs", 'active_tab')])
 def worldwide_slider_change(current_year, current_toggle):
     # Update general map
-    map_data = util.filter_map_events(
-        disaster_data, {"Start Year": current_year})
+    map_data = util.filter_events(
+        disaster_data, {"Start Year": current_year}, True)
 
-    year_data = disaster_data[disaster_data["Start Year"] == current_year][["Start Year", "Disaster Subgroup", "Dis No"]]
+    yearly_data = disaster_data[disaster_data["Start Year"] == current_year]
+    year_data = disaster_data[disaster_data["Start Year"] == current_year][[
+        "Start Year", "Disaster Subgroup", "Dis No"]]
 
-    missing_rows = pd.DataFrame({"Start Year": [], "Disaster Subgroup": [], "Dis No": []})
+    affected_data = disaster_data[disaster_data["Start Year"] <= current_year]
+
+    missing_rows = pd.DataFrame(
+        {"Start Year": [], "Disaster Subgroup": [], "Dis No": []})
 
     for dis_group in DISASTER_SUBGROUPS:
         if dis_group not in year_data["Disaster Subgroup"].values:
-            missing_rows[["Start Year", "Disaster Subgroup", "Dis No"]] = [[current_year, dis_group, None]]
+            missing_rows[["Start Year", "Disaster Subgroup", "Dis No"]] = [
+                [current_year, dis_group, None]]
 
     if not missing_rows.empty:
-        year_data = pd.concat([missing_rows, year_data.loc[:]]).reset_index(drop=True)
+        year_data = pd.concat(
+            [missing_rows, year_data.loc[:]]).reset_index(drop=True)
 
     # Update event distribution graph
     event_count = year_data.groupby(
@@ -455,80 +440,76 @@ def worldwide_slider_change(current_year, current_toggle):
         hoverlabel=dict(
             bgcolor="white"
         ),
-        xaxis_title="Disaster Count")
+        xaxis_title="Disaster Count",
+        margin=dict(l=0, b=0, t=0, r=0))
 
     # Update affected
-    affected_fig = generate_affected_graph(disaster_data, current_year, current_toggle)
+    affected_fig = components.generate_affected_graph(
+        affected_data, current_year, current_toggle)
 
-    return util.convert_events_to_geojson(map_data), event_dist_fig, affected_fig
+    aggregated_data = components.generate_aggregated_data_table(yearly_data)
+
+    return util.convert_events_to_geojson(map_data), event_dist_fig, affected_fig, aggregated_data
 
 
 @app.callback([Output('country-events', 'data'),
-               Output('gdp-graph', 'figure'),
-               Output('affected-graph', 'figure'),
-               Output('country-agg-data', 'children')],
+               Output('country-gdp-graph', 'figure'),
+               Output('country-affected-graph', 'figure'),
+               Output("country-aggregated-data", "children")],
               [Input('country-year-slider', 'value'),
-               Input('graph-toggle-buttons', 'value')],
+               Input('country-affected-tabs', 'active_tab')],
               State("countries", "click_feature"))
 def country_slider_change(current_year, toggle_value, country):
     country_code = country["properties"]["ISO_A3"]
-    data = util.filter_map_events(disaster_data, {'ISO': country_code})
+
+    data = util.filter_events(disaster_data, {'ISO': country_code})
+
+    affected_data = data[data["Start Year"] <= current_year]
+
+    yearly_data = util.filter_events(data, {"Start Year": current_year})
+
+    map_data = util.filter_events(yearly_data, {}, True)
 
     # update affected graph
-    affected_fig = generate_affected_graph(disaster_data[disaster_data["ISO"] == country_code], current_year, toggle_value)
+    affected_fig = components.generate_affected_graph(
+        affected_data, current_year, toggle_value)
 
-    # Update map
-    map_data = util.filter_map_events(data, {"Start Year": current_year})
+    gdp_fig = components.generate_gdp_graph(
+        gdp_data, data, current_year, country_code)
 
-    # update graphs gpd graph
-    years = list(range(1960, current_year+1))
-    country_gdp_data = util.get_gdp_data(
-        gdp_data, data[data["Start Year"] <= current_year], years, country_code)
-    gdp_fig = px.line(country_gdp_data, 'Start Year', 'share')
-    gdp_fig.update_traces(mode="markers+lines", hovertemplate=None)
-    gdp_fig.update_layout(hovermode="x unified", xaxis_title="Year", xaxis=dict(tickformat="d"))
+    aggregated_data = components.generate_aggregated_data_table(yearly_data)
 
-    missing_events = util.get_events_without_location(disaster_data[(
-        disaster_data["Start Year"] == current_year) & (disaster_data["ISO"] == country_code)])
-    accordion_items = [create_event_accordion(event, missing_events) for _, event in pd.concat([
-        missing_events, map_data], axis=0).iterrows()]
+    return util.convert_events_to_geojson(map_data), gdp_fig, affected_fig, aggregated_data
 
-    # aggregate data
-    number_of_deaths = map_data['Total Deaths'].sum()
-    number_of_injured = map_data['No Injured'].sum()
-    number_of_homeless = map_data['No Homeless'].sum()
 
-    aggr_data = [f'Number of deaths: {number_of_deaths}',
-                 f'Number of injured: {number_of_injured}', f'Number of homeless: {number_of_homeless}']
-    aggr_data_html = [html.P(value) for value in aggr_data]
+# @app.callback(Output('world-events-accordion', 'children'), Input('world-year-slider', 'value'), prevent_initial_call=True)
+# def slider_create_accordion_events(slider_value):
+#     missing_events = util.get_events_without_location(
+#         disaster_data[disaster_data["Start Year"] == slider_value])
+#     df = pd.concat([missing_events, map_data], axis=0)
+#     children = []
+#     for _, event in df.iterrows():
+#         children.append(create_event_accordion(event, missing_events))
+#     accordion_items = [create_event_accordion(event, missing_events) for _, event in pd.concat([
+#         missing_events, map_data], axis=0).iterrows()]
+#     print(len(accordion_items))
+#     return accordion_items
 
-    return util.convert_events_to_geojson(map_data), gdp_fig, affected_fig, accordion_items, aggr_data_html
 
-@app.callback(Output('world-events-accordion', 'children'),Input('world-year-slider', 'value'), prevent_initial_call=True)
-def slider_create_accordion_events(slider_value):
-    missing_events = util.get_events_without_location(disaster_data[disaster_data["Start Year"] == slider_value])
-    df = pd.concat([missing_events,map_data], axis=0)
-    children = []
-    for _,event in df.iterrows():
-        children.append(create_event_accordion(event,missing_events))
-    accordion_items = [create_event_accordion(event, missing_events) for _, event in pd.concat([
-        missing_events, map_data], axis=0).iterrows()]
-    print(len(accordion_items))
-    return accordion_items
+# @app.callback(Output('detailed-map', 'center'), Input('events-accordion', 'active_item'), State("countries", "click_feature"), prevent_initial_call=True)
+# def country_event_click(event_id, data):
+#     if (event_id):
+#         event, loc = util.get_event(disaster_data, event_id)
+#         return loc
+#     else:
+#         point = util.calculate_center(data)
+#         return [point.y, point.x]
 
-@app.callback(Output('detailed-map', 'center'), Input('events-accordion', 'active_item'), State("countries", "click_feature"), prevent_initial_call=True)
-def country_event_click(event_id, data):
-    if (event_id):
-        event, loc = util.get_event(disaster_data, event_id)
-        return loc
-    else:
-        point = util.calculate_center(data)
-        return [point.y, point.x]
 
-@app.callback(Output('map', 'center'), Input("world-events-accordion", 'active_item'), prevent_initial_call=True)
-def world_event_click(event_id):
-    if (event_id):
-        event, loc = util.get_event(disaster_data, event_id)
-        return loc
-    else:
-        return (40, -37)
+# @app.callback(Output('map', 'center'), Input("world-events-accordion", 'active_item'), prevent_initial_call=True)
+# def world_event_click(event_id):
+#     if (event_id):
+#         event, loc = util.get_event(disaster_data, event_id)
+#         return loc
+#     else:
+#         return (40, -37)

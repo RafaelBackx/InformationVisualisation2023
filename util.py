@@ -9,17 +9,17 @@ from data import abbrev_to_us_state, us_state_to_abbrev
 
 geolocator = Nominatim(user_agent='geoapiExercises')
 
-def filter_map_events(df, filters):
-    data = df[df["Latitude"].notnull() & df["Longitude"].notnull()]
+def filter_events(df, filters, location_important = False):
+    data = df
+    if location_important:
+        data = df[df["Latitude"].notnull() & df["Longitude"].notnull()]
     for filter in filters:
         data = data[data[filter] == filters[filter]]
     return data
 
-
 def get_events_without_location(df: pd.DataFrame):
     data = df[df['Latitude'].isnull() & df['Longitude'].isnull()]
     return data
-
 
 def get_gdp_data(df_gdp: pd.DataFrame, df_disaster: pd.DataFrame, years, country):
     columns = years + ['Country Code']
@@ -46,7 +46,6 @@ def get_gdp_data(df_gdp: pd.DataFrame, df_disaster: pd.DataFrame, years, country
         data_by_year['share'] = data_by_year.apply(calculate_gdp_share, axis=1)
         return data_by_year
 
-
 def convert_events_to_geojson(df):
     geojson = to_geojson(df=df, lat="Latitude", lon="Longitude", properties=[
                          "Dis No", "Disaster Subgroup"])  # More things can be included in the properties when it's needed
@@ -55,25 +54,20 @@ def convert_events_to_geojson(df):
                                             event["properties"]["Dis No"]]["Disaster Type"].values[0]
     return geojson
 
-
 def __get_geojson_data(filename):
     file = open(f'./Data/GeoJson1/{filename}', encoding='utf-8')
     geojson = json.load(file)
     return geojson
 
-
 def get_world_geojson():
     return __get_geojson_data('countries.json')
-
 
 def get_country_data(country_code):
     return __get_geojson_data(f'{country_code}.json_opt.json')
 
-
 def get_property(event, property):
     name = event[property]
     return name if pd.notna(name) else ''
-
 
 def get_date(event):
     year = event["Start Year"]
@@ -85,7 +79,6 @@ def get_date(event):
         return f'{int(year)}-{int(month)}'
     return f'{int(year)}-{int(month)}-{int(day)}'
 
-
 def get_event(df: pd.DataFrame, event_id):
     event = df[df['Dis No'] == event_id].iloc[0]
     print(f'event: {event}')
@@ -95,7 +88,6 @@ def get_event(df: pd.DataFrame, event_id):
         return event, None
     else:
         return event, [lat, long]
-
 
 def calculate_center(data):
     shapely_geos = shapely.from_geojson(json.dumps(data))
