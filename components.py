@@ -354,3 +354,9 @@ def generate_country_popup(disaster_data, country, current_year):
         fullscreen=True,
         is_open=True)
     return popup
+
+
+def create_tab_with_fig(fig,category):
+    return dbc.Tab(children=[
+        dcc.Graph(figure=fig)
+    ], label=category)

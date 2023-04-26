@@ -9,9 +9,13 @@ import plotly.express as px
 
 import util
 import components
+import callbacks
 
 from server import app, server
 from time import sleep
+import converter as state_converter
+
+import us_layout
 
 EVENT_COLOURS = {
     "Meteorological": "#ABA4A4",
@@ -358,7 +362,7 @@ def navigate_tabs(active_tab):
     if active_tab == "home":
         return home_layout
     elif active_tab == "us-prevention":
-        pass
+        return us_layout.us_layout
 
 
 @app.callback(Output("world-affected", "children"), [Input("world-affected-tabs", "active_tab"), Input('world-year-slider', 'value')])
@@ -481,6 +485,16 @@ def country_slider_change(current_year, toggle_value, country):
 
     return util.convert_events_to_geojson(map_data), gdp_fig, affected_fig, aggregated_data
 
+@app.callback([Output('usa-states', 'hideout'), Output('us-aggregated-data','children')], Input('usa-slider', 'value'), [State('usa-states', 'data')])
+def update_aggregated_data_on_state_click(slider_value,  data):
+    colour_map = callbacks.update_map_on_slider_increment(slider_value,data)
+    aggregated_data = callbacks.update_aggregated_data_on_slider_increment(slider_value, us_layout.df_properties)
+
+    return colour_map,aggregated_data
+
+@app.callback(Output('fema-disaster-graphs', 'children'), Input('usa-slider', 'value'), prevent_initial_call=True)
+def create_fema_disaster_graph(slider_value):
+    return callbacks.create_fema_disaster_graph(disaster_data, slider_value)
 
 # @app.callback(Output('world-events-accordion', 'children'), Input('world-year-slider', 'value'), prevent_initial_call=True)
 # def slider_create_accordion_events(slider_value):

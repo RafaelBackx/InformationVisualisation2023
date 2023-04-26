@@ -5,7 +5,9 @@ import shapely
 import json
 from geopy.geocoders import Nominatim
 import zipcodes
-from data import abbrev_to_us_state, us_state_to_abbrev
+from converter import abbrev_to_us_state, us_state_to_abbrev
+import matplotlib as mpl
+
 
 geolocator = Nominatim(user_agent='geoapiExercises')
 
@@ -110,3 +112,12 @@ def lat_long_to_state(lat,long):
         return None
     abrev = zipcodes.matching(f'{zip_code}')[0]['state']
     return abbrev_to_us_state[abrev]
+
+def ratio_to_gradient(ratio):
+    # print(ratio)
+    colour_map = mpl.colormaps['YlOrRd'].resampled(8)
+    colour = colour_map(1-ratio)
+    colour = [c * 255 for c in colour]
+    r,g,b,_ = colour
+    colour = '#%02x%02x%02x' % (int(r), int(g), int(b))
+    return colour

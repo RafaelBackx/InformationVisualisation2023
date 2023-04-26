@@ -22,7 +22,7 @@ window.dashExtensions = Object.assign({}, window.dashExtensions, {
             if (colour_map != undefined){
                 let colour = colour_map[state]
                 console.log(colour);
-                return {weight: 5, color: colour, dashArray: ''};
+                return {weight: 2, color: colour, dashArray: ''};
             }
         }
     }

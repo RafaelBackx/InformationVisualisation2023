@@ -60,3 +60,15 @@ us_state_to_abbrev = {
     
 # invert the dictionary
 abbrev_to_us_state = dict(map(reversed, us_state_to_abbrev.items()))
+
+fema_action_to_disaster = {
+    'Elevation': 'Hydrological',
+    'Floodproofed': 'Hydrological',
+    'Safe Room/Wind Shelter': 'Meteorological',
+    'Seismic Retrofit': 'Geophysical',
+    'Wildfire Retrofit': 'Geophysical',
+    'Wind Retrofit': 'Meteorological',
+    'Wind Retrofit Advanced(A-P804)': 'Meteorological',
+    'Wind Retrofit Basic (B-P804)': 'Meteorological',
+    'Wind Retrofit Estimated(ES-P804)	': 'Meteorological'
+}
