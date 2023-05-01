@@ -8,7 +8,6 @@ import zipcodes
 from converter import abbrev_to_us_state, us_state_to_abbrev
 import matplotlib as mpl
 
-
 geolocator = Nominatim(user_agent='geoapiExercises')
 
 def filter_events(df, filters, location_important = False):
@@ -23,30 +22,43 @@ def get_events_without_location(df: pd.DataFrame):
     data = df[df['Latitude'].isnull() & df['Longitude'].isnull()]
     return data
 
-def get_gdp_data(df_gdp: pd.DataFrame, df_disaster: pd.DataFrame, years, country):
+def get_gdp_data(df_gdp: pd.DataFrame, df_disaster: pd.DataFrame, years, country = None, categories = False):
     columns = years + ['Country Code']
     columns = [str(c) for c in columns]
-    year_data = df_gdp[columns]
-    data: pd.DataFrame = year_data[year_data['Country Code'] == country]
-    data = data[[str(y) for y in years]]
-    data = data.transpose()
-
-    data_by_year = df_disaster.groupby(
-        'Start Year', as_index=False).sum(numeric_only=True)
+    gdp_data_filtered = df_gdp[columns]
+    if (country):
+        gdp_data_reduced = gdp_data_filtered[gdp_data_filtered['Country Code'] == country]
+        disaster_columns = ['Start Year', 'ISO']
+        if (categories): disaster_columns += ['Disaster Subgroup']
+        disaster_data_by_year = df_disaster.groupby(disaster_columns, as_index=False).sum(numeric_only=True)
+        disaster_data_by_year = disaster_data_by_year[disaster_data_by_year['ISO'] == country] 
+    else:
+        disaster_columns = ['Start Year']
+        if (categories): disaster_columns += ['Disaster Subgroup']
+        gdp_data_reduced = pd.DataFrame([gdp_data_filtered.mean(numeric_only=True)], columns=[str(y) for y in years])
+        disaster_data_by_year = df_disaster.groupby(disaster_columns, as_index=False).sum(numeric_only=True)
+        disaster_data_by_year['ISO'] = 'WORLD'
 
     def calculate_gdp_share(row):
-        year = row['Start Year']
-        col = data.columns[0]
-        gdp = data[col][str(int(year))]
-        damages = row['Total Damages, Adjusted (\'000 US$)'] * 1000
+        year = str(int(row['Start Year']))
+        if (not (year in gdp_data_reduced.columns)):
+            return 0
+        gdp = gdp_data_reduced[year]
+        damages = row["Total Damages, Adjusted ('000 US$)"] * 1000
         return (damages / gdp) * 100
 
-    if (data_by_year.empty):
-        data_by_year["share"] = 0
-        return data_by_year
+    columns_to_fill = ['Start Year', 'ISO', 'Disaster Subgroup']
+
+    if (disaster_data_by_year.empty):
+        disaster_data_by_year["share"] = 0
     else:
-        data_by_year['share'] = data_by_year.apply(calculate_gdp_share, axis=1)
-        return data_by_year
+        disaster_data_by_year['share'] = disaster_data_by_year.apply(calculate_gdp_share, axis=1)
+    
+    if categories:
+        print(disaster_data_by_year.columns)
+        filled_df = fill_missing_columns_with_default(disaster_data_by_year,columns_to_fill,["Total Damages, Adjusted (\'000 US$)", 'share'],[0,0])
+        return filled_df
+    return disaster_data_by_year
 
 def convert_events_to_geojson(df):
     geojson = to_geojson(df=df, lat="Latitude", lon="Longitude", properties=[
@@ -121,3 +133,14 @@ def ratio_to_gradient(ratio):
     r,g,b,_ = colour
     colour = '#%02x%02x%02x' % (int(r), int(g), int(b))
     return colour
+
+def fill_missing_columns_with_default(df, columns, columns_to_fill, values):
+    copy_df = df.copy()
+    unique_columns = [copy_df[col].unique() for col in columns]
+    index = pd.MultiIndex.from_product(unique_columns,names=columns)
+    new_df = pd.DataFrame(index=index, columns=['count'])
+    merged_df = pd.merge(copy_df, new_df, how='right', left_on=columns, right_index=True)
+    for idx,col in enumerate(columns_to_fill):
+        print(col)
+        merged_df[col] = merged_df[col].fillna(values[idx])
+    return merged_df

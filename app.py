@@ -458,12 +458,14 @@ def worldwide_slider_change(current_year, current_toggle):
 
 @app.callback([Output('country-events', 'data'),
                Output('country-gdp-graph', 'figure'),
+               Output('country-gdp-graph-specific','figure'),
                Output('country-affected-graph', 'figure'),
                Output("country-aggregated-data", "children")],
               [Input('country-year-slider', 'value'),
                Input('country-affected-tabs', 'active_tab')],
               State("countries", "click_feature"))
 def country_slider_change(current_year, toggle_value, country):
+    print(current_year)
     country_code = country["properties"]["ISO_A3"]
 
     data = util.filter_events(disaster_data, {'ISO': country_code})
@@ -480,10 +482,11 @@ def country_slider_change(current_year, toggle_value, country):
 
     gdp_fig = components.generate_gdp_graph(
         gdp_data, data, current_year, country_code)
+    gdp_fig_specific = components.generate_gdp_graph(gdp_data, data, current_year, country_code, True)
 
     aggregated_data = components.generate_aggregated_data_table(yearly_data)
 
-    return util.convert_events_to_geojson(map_data), gdp_fig, affected_fig, aggregated_data
+    return util.convert_events_to_geojson(map_data), gdp_fig, gdp_fig_specific, affected_fig, aggregated_data
 
 @app.callback([Output('usa-states', 'hideout'), Output('us-aggregated-data','children')], Input('usa-slider', 'value'), [State('usa-states', 'data')])
 def update_aggregated_data_on_state_click(slider_value,  data):
@@ -496,6 +499,9 @@ def update_aggregated_data_on_state_click(slider_value,  data):
 def create_fema_disaster_graph(slider_value):
     return callbacks.create_fema_disaster_graph(disaster_data, slider_value)
 
+@app.callback(Output('fema-cost-distribution-tabs', 'children'), Input('usa-slider', 'value'), prevent_initial_call=True)
+def create_fema_cost_distributions(slider_value):
+    return callbacks.create_fema_cost_distribution(slider_value, ['structureType', 'foundationType'])
 # @app.callback(Output('world-events-accordion', 'children'), Input('world-year-slider', 'value'), prevent_initial_call=True)
 # def slider_create_accordion_events(slider_value):
 #     missing_events = util.get_events_without_location(

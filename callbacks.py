@@ -1,4 +1,6 @@
 import plotly.express as px
+from dash import dcc
+import dash_bootstrap_components as dbc
 
 import components
 import converter as state_converter
@@ -37,7 +39,6 @@ def update_aggregated_data_on_slider_increment(slider_value, df_properties):
 
 def create_fema_disaster_graph(df_disasters, year):
     df = us_layout.compare_fema_actions_to_disaster_costs(df_disasters, year)
-    #? create tab for each category ?
     categories = df['Disaster Subgroup'].unique()
     tabs = []
     for category in categories:
@@ -45,4 +46,15 @@ def create_fema_disaster_graph(df_disasters, year):
         tab = components.create_tab_with_fig(fig,category)
         tabs.append(tab)
     return tabs
+
+def create_fema_cost_distribution(year,categories):
+    children = []
+    for category in categories:
+        data = us_layout.get_fema_cost_distribution(None,year,category)
+        fig = px.bar(data,category,'spent percentage')
+        child = dbc.Tab(dcc.Graph(figure=fig), label=category)
+        children.append(child)
+    return children
+
+
 

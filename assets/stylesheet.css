@@ -98,8 +98,8 @@
 }
 
 .gdp-cardbody {
-    display: flex;
-    align-items: end;
+    /* display: flex;
+    align-items: end; */
 }
 
 .graphs-row {

@@ -111,8 +111,25 @@ us_layout = html.Div(id='us_layout', children=[
                         ]
                     )
                 ],
-                width=9,
-                className='column map-column'
+                width=6,
+                className='column fema-column'
+            ),
+            dbc.Col(
+                children=[
+                    dbc.Card(
+                        children=[
+                            dbc.CardHeader('Fema Cost distribution - '),
+                            dbc.CardBody(
+                                id='fema-cost-distribution',
+                                children=[
+                                    dbc.Tabs(id='fema-cost-distribution-tabs')
+                                ]
+                            )
+                        ]
+                    )
+                ],
+                width=6,
+                className='column'
             )
         ]
     )
@@ -146,6 +163,7 @@ def get_total_spent(year):
     total_spent = total_properties['actualAmountPaid']
     return total_spent
 
+#TODO add year to function
 def compare_fema_actions_to_disaster_costs(df_disasters: pd.DataFrame, year: int) -> pd.DataFrame:
     # calculate total costs per disaster subgroup
     df_disasters_us = df_disasters[df_disasters['ISO'] == 'USA']
@@ -171,3 +189,14 @@ def compare_fema_actions_to_disaster_costs(df_disasters: pd.DataFrame, year: int
     disaster_spent['Total Mitigated'] = disaster_spent.apply(lambda x: spent_map[x['Start Year']][x['Disaster Subgroup']], axis=1)
     print(disaster_spent)
     return disaster_spent
+
+def get_fema_cost_distribution(state,year,category):
+    if (state):
+        data = df_properties[df_properties['state'] == state]
+    else:
+        data = df_properties
+
+    categories = data.groupby(category, as_index=False).sum(numeric_only=True)
+    total_spent = sum(categories['actualAmountPaid'].values)      
+    categories['spent percentage'] = categories.apply(lambda x: x['actualAmountPaid']/total_spent, axis=1)
+    return categories

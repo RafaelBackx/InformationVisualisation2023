@@ -97,11 +97,18 @@ def generate_affected_graph(df, current_year, current_toggle):
     return fig
 
 
-def generate_gdp_graph(gdp_data, data, current_year, country_code):
+def generate_gdp_graph(gdp_data, data, current_year, country_code, categories = False):
     years = list(range(1960, current_year+1))
+    print('before getting gpd data')
     country_gdp_data = util.get_gdp_data(
-        gdp_data, data[data["Start Year"] <= current_year], years, country_code)
-    gdp_fig = px.line(country_gdp_data, 'Start Year', 'share')
+        gdp_data, data[data["Start Year"] <= current_year], years, country_code, categories)
+    print('after getting gpd data')
+    print(country_gdp_data.columns)
+    # print(country_gdp_data['Start Year', 'ISO', "Total Damages, Adjusted ('000 US$)", 'share' ,'Disaster Subgroup'].head())
+    if categories:
+        gdp_fig = px.line(country_gdp_data, 'Start Year', 'share', color='Disaster Subgroup')
+    else:
+        gdp_fig = px.line(country_gdp_data, 'Start Year', 'share')
     gdp_fig.update_traces(mode="markers+lines", hovertemplate=None)
     gdp_fig.update_layout(hovermode="x unified", xaxis_title="Year", xaxis=dict(
         tickformat="d"), margin=dict(l=0, r=0, t=0, b=0))
@@ -224,6 +231,8 @@ def generate_country_popup(disaster_data, country, current_year):
 
     gdp_graph = dcc.Graph(id='country-gdp-graph',
                           style={"height": "25vh", "width": "100%"})
+    gdp_specific_graph = dcc.Graph(id='country-gdp-graph-specific',
+                          style={"height": "25vh", "width": "100%"})
 
     country_affected_graph = dcc.Graph(
         id='country-affected-graph', style={"height": "25vh", "width": "100%"})
@@ -294,7 +303,11 @@ def generate_country_popup(disaster_data, country, current_year):
                                             ),
                                             dbc.CardBody(
                                                 children=[
-                                                    gdp_graph
+                                                    dbc.Tabs(id='gdp-tabs', 
+                                                        children=[
+                                                            dbc.Tab(label="General",id='gdp-general', children=[gdp_graph]),
+                                                            dbc.Tab(label="Specific",id='gdp-specific', children=[gdp_specific_graph])
+                                                        ], active_tab="gdp-general"),
                                                 ],
                                                 className="gdp-cardbody")
                                         ],
