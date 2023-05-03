@@ -90,8 +90,8 @@ def get_date(event):
     if (pd.isna(month)):
         return f'{int(year)}'
     if (pd.isna(day)):
-        return f'{int(year)}-{int(month)}'
-    return f'{int(year)}-{int(month)}-{int(day)}'
+        return f'{int(month)}/{int(year)}'
+    return f'{int(day)}/{int(month)}/{int(year)}'
 
 def get_event(df: pd.DataFrame, event_id):
     event = df[df['Dis No'] == event_id].iloc[0]

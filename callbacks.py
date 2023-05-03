@@ -56,5 +56,5 @@ def create_fema_cost_distribution(year,categories):
         children.append(child)
     return children
 
-
-
+def show_events_button_clicked(events):
+    return components.create_events_accordion(events)

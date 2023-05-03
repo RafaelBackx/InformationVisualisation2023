@@ -97,16 +97,12 @@ def generate_affected_graph(df, current_year, current_toggle):
     return fig
 
 
-def generate_gdp_graph(gdp_data, data, current_year, country_code, categories = False):
+def generate_gdp_graph(gdp_data, data, current_year, country_code = None, categories = False):
     years = list(range(1960, current_year+1))
-    print('before getting gpd data')
     country_gdp_data = util.get_gdp_data(
         gdp_data, data[data["Start Year"] <= current_year], years, country_code, categories)
-    print('after getting gpd data')
-    print(country_gdp_data.columns)
-    # print(country_gdp_data['Start Year', 'ISO', "Total Damages, Adjusted ('000 US$)", 'share' ,'Disaster Subgroup'].head())
     if categories:
-        gdp_fig = px.line(country_gdp_data, 'Start Year', 'share', color='Disaster Subgroup')
+        gdp_fig = px.line(country_gdp_data, 'Start Year', 'share', color_discrete_map=EVENT_COLOURS)
     else:
         gdp_fig = px.line(country_gdp_data, 'Start Year', 'share')
     gdp_fig.update_traces(mode="markers+lines", hovertemplate=None)
@@ -114,6 +110,39 @@ def generate_gdp_graph(gdp_data, data, current_year, country_code, categories = 
         tickformat="d"), margin=dict(l=0, r=0, t=0, b=0))
     return gdp_fig
 
+def create_events_accordion(events):
+    accordion = []
+    for _, event in events.iterrows():
+        accordion.append(create_event_accordion_item(event))
+    return accordion
+
+def create_event_accordion_item(event):
+    if not pd.isnull(event["Event Name"]):
+        title = event["Event Name"]
+    else:
+        title = f"{event['Disaster Type']}, {util.get_date(event)}"
+
+    if (not pd.isnull(event["Latitude"])) and (not pd.isnull(event["Longitude"])):
+        location = f"{event['Latitude']}, {event['Longitude']}"
+    else:
+        location = "Unknown"
+
+    if (not pd.isnull(event["Disaster Subsubtype"])):
+        classification = f"{event['Disaster Subgroup']}/{event['Disaster Type']}/{event['Disaster Subsubtype']}"
+    else:
+        classification = f"{event['Disaster Subgroup']}/{event['Disaster Type']}"
+
+    accordion = dbc.AccordionItem(
+        title=title,
+        children=[
+            html.P([html.B("Event classification: "), classification]),
+            html.P([html.B("Event date: "), util.get_date(event)]),
+            html.P([html.B("Region: "), f"{event['Region']}"]),
+            html.P([html.B("Lat, Long: "), location]),
+        ]
+    )
+
+    return accordion
 
 def generate_country_popup(disaster_data, country, current_year):
     country_name = country["properties"]["ADMIN"]
@@ -305,8 +334,8 @@ def generate_country_popup(disaster_data, country, current_year):
                                                 children=[
                                                     dbc.Tabs(id='gdp-tabs', 
                                                         children=[
-                                                            dbc.Tab(label="General",id='gdp-general', children=[gdp_graph]),
-                                                            dbc.Tab(label="Specific",id='gdp-specific', children=[gdp_specific_graph])
+                                                            dbc.Tab(label="General",id='gdp-general',tab_id="gdp-general", children=[gdp_graph]),
+                                                            dbc.Tab(label="Specific",id='gdp-specific',tab_id="gdp-specific", children=[gdp_specific_graph])
                                                         ], active_tab="gdp-general"),
                                                 ],
                                                 className="gdp-cardbody")
@@ -354,7 +383,9 @@ def generate_country_popup(disaster_data, country, current_year):
                 children=[
                     dbc.Offcanvas(
                         children=[
-
+                            dbc.Accordion(
+                                id="country-events-accordion"
+                            )
                         ],
                         is_open=False,
                         placement="end",
