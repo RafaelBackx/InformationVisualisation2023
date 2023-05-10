@@ -56,43 +56,56 @@ def create_fema_cost_distribution(year,categories):
     return children
 
 def changed_affected_filter(events, current_year, current_filter, country_code = None):
+    # If a country code is given filter events using the code
     if country_code:
         events = util.filter_events(events, {'ISO': country_code})
+
+    # Filter events to go up until current year
     events = events[events["Start Year"] <= current_year]
+
+    # Generate the updated graph
     return components.generate_affected_graph(events, current_year, current_filter)
 
 def changed_gdp_filter(gdp, events, current_year, country_code = None, specific = False):
+    # If a country code is given filter events using the code
     if country_code:
         events = util.filter_events(events, {'ISO': country_code})
+
+    # Generate the updated graph
     return components.generate_gdp_graph(gdp, events, current_year, country_code, specific)
 
 def show_events_button_clicked(events, current_year, country_code = None):
+    # If a country code is given filter events using the code
     if country_code:
         events = util.filter_events(events, {'ISO': country_code})
+
+    # Filter the events by the current year
     events = util.filter_events(events, {"Start Year": current_year})
+
+    # Return the updated component
     return components.create_events_accordion(events)
 
 def slider_change(events, gdp_data, current_year, affected_filter, gdp_filter, country_code = None):
+    # If a country code is given filter events using the code
     if country_code:
         events = util.filter_events(events, {'ISO': country_code})
+
+    # Filter the events that contain location data for the map
     map_data = util.filter_events(events, {"Start Year": current_year}, True)
 
+    # Filter the events by year
     yearly_data = util.filter_events(events, {"Start Year": current_year})
 
+    # Convert events to geojson for the map
     events_geojson = util.convert_events_to_geojson(map_data)
+
+    # Generate the gdp figure
     gdp_fig = components.generate_gdp_graph(gdp_data, events, current_year, country_code, gdp_filter != "general")
+
+    # Generate the affected figure
     affected_fig = components.generate_affected_graph(events, current_year, affected_filter)
+
+    # Generate the aggregated data component
     aggregated_data = components.generate_aggregated_data_table(yearly_data)
 
     return events_geojson, gdp_fig, affected_fig, aggregated_data
-
-def toggle_popup(events, gdp_data, current_year, country_name, country_code):
-    country_data = util.filter_events(events, {"ISO": country_code, "Start Year": current_year})
-    map_data = util.filter_events(country_data, {}, True)
-    country_geojson = util.get_country_data(country_code)
-    events_geojson = util.convert_events_to_geojson(map_data)
-    gdp_graph = components.generate_gdp_graph(gdp_data, country_data, current_year, country_code)
-    affected_graph = components.generate_affected_graph(country_data, current_year, "deaths")
-    aggregated_data = components.generate_aggregated_data_table(country_data)
-
-    return country_name, True, current_year, country_geojson, events_geojson, gdp_graph, affected_graph, aggregated_data

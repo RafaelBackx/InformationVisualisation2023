@@ -11,6 +11,7 @@ import util
 
 ns = Namespace("dashExtensions", "default")
 
+# Colormap for graphs
 EVENT_COLOURS = {
     "Meteorological": "#ABA4A4",
     "Geophysical": "#C95B20",
@@ -25,14 +26,20 @@ DISASTER_SUBGROUPS = [
     "Meteorological"
 ]
 
-
 def generate_aggregated_data_table(df):
+    # Fill missing values with 0s
     df = df.fillna(0)
+
+    # Aggregate data and keep relevant columns
     yearly_data = df.groupby("Start Year").sum(numeric_only=True)[
         ["Total Deaths", "No Injured", "No Affected", "No Homeless", "Reconstruction Costs ('000 US$)", "Insured Damages ('000 US$)", "Total Damages ('000 US$)"]]
+    
+    # If there was no data, just construct a dataframe containing 0s
     if df.empty:
         yearly_data = pd.DataFrame({"Total Deaths": [0], "No Injured": [0], "No Affected": [0], "No Homeless": [
                                    0], "Total Damages ('000 US$)": [0], "Reconstruction Costs ('000 US$)": [0], "Insured Damages ('000 US$)": [0]})
+        
+    # Mapping between dataframe column names and names used in the front-end
     column_mapping = {
         "Total Deaths": "Deaths",
         "No Injured": "Injured",
@@ -42,20 +49,23 @@ def generate_aggregated_data_table(df):
         "Reconstruction Costs ('000 US$)": "Reconstruction Costs ($)",
         "Insured Damages ('000 US$)": "Insured ($)"
     }
+
+    # Construct table
     table_rows = []
     for column in column_mapping:
-        table_rows.append(html.Tr(
-            [html.Td(column_mapping[column]), html.Td(yearly_data[column].values[0])]))
+        table_rows.append(html.Tr([html.Td(column_mapping[column]), html.Td(yearly_data[column].values[0])]))
     return dbc.Table(html.Tbody(table_rows), bordered=True)
 
 
 def generate_affected_graph(df, current_year, current_toggle):
-    affected_data = df[["Start Year", "Disaster Subgroup",
+    # Filter dataframe and only keep relevant columns
+    affected_data = df[df["Start Year"] <= current_year][["Start Year", "Disaster Subgroup",
                         "Total Deaths", "No Injured", "No Homeless"]]
 
+    # Fill missing data with 0s
     missing_rows = {"Start Year": [], "Disaster Subgroup": [],
                     "Total Deaths": [], "No Injured": [], "No Homeless": []}
-
+    
     for year in range(1960, current_year+1):
         if year not in affected_data["Start Year"].values:
             for dis_group in DISASTER_SUBGROUPS:
@@ -73,15 +83,17 @@ def generate_affected_graph(df, current_year, current_toggle):
                     missing_rows["No Injured"].append(None)
                     missing_rows["No Homeless"].append(None)
 
+    # Add augmented rows to original data
     if len(missing_rows["Start Year"]) != 0:
-        affected_data = pd.concat(
-            [pd.DataFrame(missing_rows), affected_data.loc[:]]).reset_index(drop=True)
+        affected_data = pd.concat([pd.DataFrame(missing_rows), affected_data.loc[:]]).reset_index(drop=True)
 
+    # Replace Nan by 0s
     affected_data = affected_data.fillna(0)
 
-    affected_data = affected_data.groupby(
-        ["Start Year", "Disaster Subgroup"], as_index=False).sum(numeric_only=True)
+    # Aggregate data
+    affected_data = affected_data.groupby(["Start Year", "Disaster Subgroup"], as_index=False).sum(numeric_only=True)
 
+    # Map toggle value to dataframe column
     column_map = {
         'deaths': 'Total Deaths',
         'injuries': 'No Injured',
@@ -89,13 +101,13 @@ def generate_affected_graph(df, current_year, current_toggle):
     }
     column = column_map[current_toggle]
 
+    # Create graph
     fig = px.line(affected_data, "Start Year", column,
                   color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
     fig.update_traces(mode="markers+lines", hovertemplate=None)
     fig.update_layout(hovermode="x unified", xaxis_title="Year", xaxis=dict(
         tickformat="d"), margin=dict(l=0, r=0, t=0, b=0))
     return fig
-
 
 def generate_gdp_graph(gdp_data, data, current_year, country_code = None, categories = False):
     years = list(range(1960, current_year+1))
@@ -112,27 +124,32 @@ def generate_gdp_graph(gdp_data, data, current_year, country_code = None, catego
     return gdp_fig
 
 def create_events_accordion(events):
+    # Create accordion for all events
     accordion = []
     for _, event in events.iterrows():
         accordion.append(create_event_accordion_item(event))
     return accordion
 
 def create_event_accordion_item(event):
+    # If the disaster has a name use it, else use the date
     if not pd.isnull(event["Event Name"]):
         title = event["Event Name"]
     else:
         title = f"{event['Disaster Type']}, {util.get_date(event)}"
 
+    # If location data is known use it, else unknown
     if (not pd.isnull(event["Latitude"])) and (not pd.isnull(event["Longitude"])):
         location = f"{event['Latitude']}, {event['Longitude']}"
     else:
         location = "Unknown"
 
+    # Format disaster classification
     if (not pd.isnull(event["Disaster Subsubtype"])):
         classification = f"{event['Disaster Subgroup']}/{event['Disaster Type']}/{event['Disaster Subsubtype']}"
     else:
         classification = f"{event['Disaster Subgroup']}/{event['Disaster Type']}"
 
+    # Create accordion for event
     accordion = dbc.AccordionItem(
         title=title,
         children=[
@@ -146,11 +163,15 @@ def create_event_accordion_item(event):
     return accordion
 
 def generate_country_popup(disaster_data, country, current_year):
+    # Fetch meta data about the country
     country_name = country["properties"]["ADMIN"]
-    # Can be useful to do lookups
     country_iso = country["properties"]["ISO_A3"]
+
+    # Filter the events by country code and start year
     country_data = util.filter_events(
         disaster_data, {"ISO": country_iso, "Start Year": current_year})
+    
+    # Filter map events to the events that contain location data
     map_data = util.filter_events(country_data, {}, True)
 
     country_slider = dcc.Slider(min=1960,
@@ -218,12 +239,16 @@ def generate_country_popup(disaster_data, country, current_year):
         color="success",
         class_name="me-1",
         id="country-animation-button")
+    
+    animation_interval = dcc.Interval(
+        'country-animation-interval', interval=500, disabled=True)
 
     country_slider_wrapper = dbc.Row(
         children=[
             dbc.Col(
                 children=[
-                    animation_button
+                    animation_button,
+                    animation_interval
                 ],
                 className="column",
                 width="auto"),
