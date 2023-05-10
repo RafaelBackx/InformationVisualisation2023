@@ -55,7 +55,6 @@ def get_gdp_data(df_gdp: pd.DataFrame, df_disaster: pd.DataFrame, years, country
         disaster_data_by_year['share'] = disaster_data_by_year.apply(calculate_gdp_share, axis=1)
     
     if categories:
-        print(disaster_data_by_year.columns)
         filled_df = fill_missing_columns_with_default(disaster_data_by_year,columns_to_fill,["Total Damages, Adjusted (\'000 US$)", 'share'],[0,0])
         return filled_df
     return disaster_data_by_year

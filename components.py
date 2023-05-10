@@ -101,8 +101,9 @@ def generate_gdp_graph(gdp_data, data, current_year, country_code = None, catego
     years = list(range(1960, current_year+1))
     country_gdp_data = util.get_gdp_data(
         gdp_data, data[data["Start Year"] <= current_year], years, country_code, categories)
+    
     if categories:
-        gdp_fig = px.line(country_gdp_data, 'Start Year', 'share', color_discrete_map=EVENT_COLOURS)
+        gdp_fig = px.line(country_gdp_data, 'Start Year', 'share', color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
     else:
         gdp_fig = px.line(country_gdp_data, 'Start Year', 'share')
     gdp_fig.update_traces(mode="markers+lines", hovertemplate=None)

@@ -175,15 +175,14 @@ def country_click(_n_clicks, feature, current_year):
         # disable the interval because otherwise it draws on the other map
         return components.generate_country_popup(disaster_data, feature, current_year)
     
-@app.callback(Output('country-events', 'data', allow_duplicate=True),
-              Output('country-gdp-graph', 'figure', allow_duplicate=True),
-              Output('country-affected-graph', 'figure', allow_duplicate=True),
-              Output("country-aggregated-data", "children", allow_duplicate=True),
+@app.callback(Output('country-events', 'data'),
+              Output('country-gdp-graph', 'figure'),
+              Output('country-affected-graph', 'figure'),
+              Output("country-aggregated-data", "children"),
               Input('country-year-slider', 'value'),
               [State('country-affected-tabs', 'active_tab'),
                State("country-gdp-tabs", "active_tab"),
-               State("countries", "click_feature")], 
-              prevent_initial_call=True)
+               State("countries", "click_feature")])
 def country_slider_change(current_year, affected_filter, gdp_filter, country):
     country_code = country["properties"]["ISO_A3"]
     return callbacks.slider_change(disaster_data, gdp_data, current_year, affected_filter, gdp_filter, country_code)
