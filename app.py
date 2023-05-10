@@ -225,9 +225,15 @@ def country_show_events(n_clicks, io, current_year, country):
               State('usa-states', 'data'))
 def update_aggregated_data_on_state_click(slider_value,  data):
     colour_map = callbacks.update_map_on_slider_increment(slider_value,data)
-    aggregated_data = callbacks.update_aggregated_data_on_slider_increment(slider_value, us_layout.df_properties)
+    aggregated_data = callbacks.update_aggregated_data_on_slider_increment(slider_value)
 
     return colour_map,aggregated_data
+
+@app.callback(Output('us-aggregated-data', 'children', allow_duplicate=True), Input('usa-states','click_feature'), State('usa-slider', 'value'), prevent_initial_call=True)
+def update_usa_states_aggregated_data_on_click(state_info, slider_value):
+    state_name = state_info['properties']['NAME_1']
+    aggregated_data = callbacks.update_aggregated_data_on_slider_increment(slider_value,state=state_name)
+    return aggregated_data
 
 @app.callback(Output('fema-disaster-graphs', 'children'), 
               Input('usa-slider', 'value'), 

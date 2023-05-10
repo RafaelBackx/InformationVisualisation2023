@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, dcc, State, ALL, dash
@@ -17,6 +18,91 @@ ns = Namespace('dashExtensions', 'default')
 
 df_properties = pd.read_json('./Data/preprocessed-fema-properties.json')
 df_projects = pd.read_json('./Data/preprocessed-fema-projects.json')
+df_disasters = pd.read_csv('./Data/Preprocessed-Natural-Disasters.csv', delimiter=';')
+
+def compare_deaths_before_and_after_fema(df_disasters):
+    fema_date = 1995
+    us_disasters = df_disasters[df_disasters['ISO'] == 'USA'].groupby(['Start Year', 'us state'], as_index=False).sum(numeric_only=True)
+    before_fema = us_disasters[us_disasters['Start Year'] <= fema_date].groupby('us state', as_index=False).sum(numeric_only=True)
+    number_of_deaths_before_fema = before_fema['Total Deaths'].sum()
+    number_of_events_per_year_before_fema = len(us_disasters[us_disasters['Start Year'] <= fema_date])
+    death_ratio_before = number_of_deaths_before_fema/number_of_events_per_year_before_fema
+
+    after_fema = us_disasters[us_disasters['Start Year'] > fema_date].groupby('us state', as_index=False).sum(numeric_only=True)
+    number_of_deaths_after_fema = after_fema['Total Deaths'].sum()
+    number_events_per_year_after_fema = len(us_disasters[us_disasters['Start Year'] > fema_date])
+    death_ratio_after = number_of_deaths_after_fema / number_events_per_year_after_fema
+
+    new_df = pd.DataFrame(columns=['state', 'Deaths before Fema', 'Deaths after Fema'])
+    new_df['state'] = after_fema['us state']
+    new_df['Deaths before Fema'] = new_df.apply(lambda row: sum(before_fema[before_fema['us state'] == row['state']]['Total Deaths'], 0), axis=1)
+    new_df['Deaths after Fema'] = new_df.apply(lambda row: sum(after_fema[after_fema['us state'] == row['state']]['Total Deaths'],0), axis=1)
+    fig = px.bar(new_df,x='state', y=['Deaths before Fema', 'Deaths after Fema'], log_y=True)
+    fig.add_annotation(text=f'Death ratio before and after Fema intervention<br>Death ratio before Fema: {death_ratio_before}<br>Death ratio after Fema: {death_ratio_after}',
+                       align='left',
+                       showarrow=False,
+                       xref='paper',
+                       yref='paper',
+                       x=2,
+                       y=0.8,
+                       bordercolor='black',
+                       borderwidth=1)
+    return fig
+
+
+def compare_mitigation_and_damages_graph(df_disasters):
+    us_disasters = df_disasters[df_disasters['ISO'] == 'USA']
+    us_disasters = us_disasters.groupby(['us state'], as_index=False).sum(numeric_only=True)
+    state_properties = df_properties.groupby(['state'], as_index=False).sum(numeric_only=True)
+
+
+    df_to_compare = pd.DataFrame(columns=['state', 'mitigation costs', 'damages'])
+    df_to_compare['state'] = df_properties['state'].unique()
+    df_to_compare['mitigation costs'] = df_to_compare.apply(lambda row: sum(state_properties[state_properties['state'] == row['state']]['actualAmountPaid'].values,0), axis=1)
+    df_to_compare['damages'] = df_to_compare.apply(lambda row: sum(us_disasters[us_disasters['us state'] == row['state']]["Total Damages, Adjusted ('000 US$)"].values,0), axis=1)
+    
+    return px.bar(df_to_compare, x='state', y=['mitigation costs', 'damages'], log_y=True)
+
+def compare_prevention_costs_with_other_country(df_disasters, country=None):
+    df_disasters_us = df_disasters[df_disasters['ISO'] == 'USA']
+
+    all_country_iso = df_disasters['ISO'].unique()
+    years = df_disasters['Start Year'].unique()
+    grouped = df_properties.groupby('programFy', as_index=False).sum(numeric_only=True)
+    grouped['actualAmountPaid'] = grouped['actualAmountPaid'].cumsum()
+    disasters_grouped = df_disasters_us.groupby('Start Year', as_index=False).sum(numeric_only=True)
+    disasters_grouped["Total Damages, Adjusted ('000 US$)"] = disasters_grouped["Total Damages, Adjusted ('000 US$)"].cumsum()
+
+    def get_prevention_costs(row):
+        prevention_row = grouped[grouped['programFy'] == row['Start Year']]
+        if (prevention_row.empty):
+            return 0.
+        return prevention_row['actualAmountPaid']
+
+    def get_total_costs(start_year, country = None):
+        if country:
+            country_disasters = df_disasters[df_disasters['ISO'] == country]
+        else:
+            country_disasters = df_disasters[df_disasters['ISO'] != "USA"]
+        country_grouped = country_disasters.groupby('Start Year', as_index=False).mean(numeric_only=True)
+        country_grouped["Total Damages, Adjusted ('000 US$)"] = country_grouped["Total Damages, Adjusted ('000 US$)"].cumsum()
+        other_country_row = country_grouped[country_grouped['Start Year'] == start_year]
+        if other_country_row.empty:
+            return 0
+        else:
+            return other_country_row["Total Damages, Adjusted ('000 US$)"].mean()
+
+
+    disasters_grouped['prevention costs'] = disasters_grouped.apply(get_prevention_costs, axis=1)
+    disasters_grouped['prevention costs'] = disasters_grouped['prevention costs'].astype(dtype=float)
+    disasters_grouped['world average'] = disasters_grouped.apply((lambda row: get_total_costs(row["Start Year"])), axis=1)
+    disasters_grouped['world average'] = disasters_grouped['world average'].astype(dtype=float)
+    
+    return px.line(disasters_grouped[disasters_grouped['Start Year'] < 2023], 'Start Year', ["Total Damages, Adjusted ('000 US$)", 'world average'])
+
+# prevention_costs = dcc.Graph(id='prevention-costs', figure=compare_prevention_costs_with_other_country(df_disasters))
+death_graph = dcc.Graph(id='death_graph', figure=compare_deaths_before_and_after_fema(df_disasters))
+mitigation_graph = dcc.Graph(id='mitigation-graph', figure=compare_mitigation_and_damages_graph(df_disasters))
 
 usa_slider = dcc.Slider(min=1995,
                           max=2023,
@@ -130,6 +216,34 @@ us_layout = html.Div(id='us_layout', children=[
                 ],
                 width=6,
                 className='column'
+            )
+        ]
+    ),
+    dbc.Row(
+        children=[
+            dbc.Col(
+                children=[
+                    dbc.Card(
+                        children=[
+                            dbc.CardHeader('Comparison Mitigation vs damages'),
+                            dbc.CardBody(children=[mitigation_graph])
+                        ]
+                    )
+                ],
+                width=6,
+                className='column fema-column'
+            ),
+            dbc.Col(
+                children=[
+                    dbc.Card(
+                        children=[
+                            dbc.CardHeader('Comparison of deaths before and after Fema intervention'),
+                            dbc.CardBody(children=[death_graph])
+                        ]
+                    )       
+                ],
+                width=6,
+                className='column fema-column'
             )
         ]
     )
