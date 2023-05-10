@@ -10,9 +10,6 @@ __pycache__/
 # C extensions
 *.so
 
-Data/GeoJson/*.json
-Data/GeoJson1/*.json
-
 node_modules/
 
 # Distribution / packaging

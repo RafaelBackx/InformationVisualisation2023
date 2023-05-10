@@ -1,0 +1,9 @@
+{"type":"FeatureCollection", "features": [
+{"type":"Feature","geometry":null,"properties":{"#!/bin/bash":""}},
+{"type":"Feature","geometry":null,"properties":{"#!/bin/bash":"DIR=\"./\""}},
+{"type":"Feature","geometry":null,"properties":{"#!/bin/bash":""}},
+{"type":"Feature","geometry":null,"properties":{"#!/bin/bash":"for file in \"$DIR\"/*"}},
+{"type":"Feature","geometry":null,"properties":{"#!/bin/bash":"do"}},
+{"type":"Feature","geometry":null,"properties":{"#!/bin/bash":"    mapshaper $file -simplify 10% -o \"$file\"_opt.json"}},
+{"type":"Feature","geometry":null,"properties":{"#!/bin/bash":"done"}}
+]}
