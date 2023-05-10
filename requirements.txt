@@ -62,7 +62,6 @@ Pygments==2.15.0
 pyparsing==3.0.9
 python-dateutil==2.8.2
 pytz==2023.3
-pywin32==304
 pyzmq==25.0.2
 setuptools==67.6.1
 shapely==2.0.1
