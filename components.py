@@ -260,8 +260,6 @@ def generate_country_popup(disaster_data, country, current_year):
 
     gdp_graph = dcc.Graph(id='country-gdp-graph',
                           style={"height": "25vh", "width": "100%"})
-    gdp_specific_graph = dcc.Graph(id='country-gdp-graph-specific',
-                          style={"height": "25vh", "width": "100%"})
 
     country_affected_graph = dcc.Graph(
         id='country-affected-graph', style={"height": "25vh", "width": "100%"})
@@ -332,11 +330,12 @@ def generate_country_popup(disaster_data, country, current_year):
                                             ),
                                             dbc.CardBody(
                                                 children=[
-                                                    dbc.Tabs(id='gdp-tabs', 
+                                                    dbc.Tabs(id='country-gdp-tabs', 
                                                         children=[
-                                                            dbc.Tab(label="General",id='gdp-general',tab_id="gdp-general", children=[gdp_graph]),
-                                                            dbc.Tab(label="Specific",id='gdp-specific',tab_id="gdp-specific", children=[gdp_specific_graph])
-                                                        ], active_tab="gdp-general"),
+                                                            dbc.Tab(label="General",id='gdp-general',tab_id="general"),
+                                                            dbc.Tab(label="Specific",id='gdp-specific',tab_id="specific")
+                                                        ], active_tab="general"),
+                                                        gdp_graph
                                                 ],
                                                 className="gdp-cardbody")
                                         ],

@@ -56,5 +56,44 @@ def create_fema_cost_distribution(year,categories):
         children.append(child)
     return children
 
-def show_events_button_clicked(events):
+def changed_affected_filter(events, current_year, current_filter, country_code = None):
+    if country_code:
+        events = util.filter_events(events, {'ISO': country_code})
+    events = events[events["Start Year"] <= current_year]
+    return components.generate_affected_graph(events, current_year, current_filter)
+
+def changed_gdp_filter(gdp, events, current_year, country_code = None, specific = False):
+    if country_code:
+        events = util.filter_events(events, {'ISO': country_code})
+    return components.generate_gdp_graph(gdp, events, current_year, country_code, specific)
+
+def show_events_button_clicked(events, current_year, country_code = None):
+    if country_code:
+        events = util.filter_events(events, {'ISO': country_code})
+    events = util.filter_events(events, {"Start Year": current_year})
     return components.create_events_accordion(events)
+
+def slider_change(events, gdp_data, current_year, affected_filter, gdp_filter, country_code = None):
+    if country_code:
+        events = util.filter_events(events, {'ISO': country_code})
+    map_data = util.filter_events(events, {"Start Year": current_year}, True)
+
+    yearly_data = util.filter_events(events, {"Start Year": current_year})
+
+    events_geojson = util.convert_events_to_geojson(map_data)
+    gdp_fig = components.generate_gdp_graph(gdp_data, events, current_year, country_code, gdp_filter != "general")
+    affected_fig = components.generate_affected_graph(events, current_year, affected_filter)
+    aggregated_data = components.generate_aggregated_data_table(yearly_data)
+
+    return events_geojson, gdp_fig, affected_fig, aggregated_data
+
+def toggle_popup(events, gdp_data, current_year, country_name, country_code):
+    country_data = util.filter_events(events, {"ISO": country_code, "Start Year": current_year})
+    map_data = util.filter_events(country_data, {}, True)
+    country_geojson = util.get_country_data(country_code)
+    events_geojson = util.convert_events_to_geojson(map_data)
+    gdp_graph = components.generate_gdp_graph(gdp_data, country_data, current_year, country_code)
+    affected_graph = components.generate_affected_graph(country_data, current_year, "deaths")
+    aggregated_data = components.generate_aggregated_data_table(country_data)
+
+    return country_name, True, current_year, country_geojson, events_geojson, gdp_graph, affected_graph, aggregated_data
