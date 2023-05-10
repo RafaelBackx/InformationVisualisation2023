@@ -13,7 +13,6 @@ locale.setlocale(locale.LC_ALL, '')
 from dash import html
 
 def update_map_on_slider_increment(slider_value,  data):
-    print(slider_value)
     features = data['features']
     state_iso_original = [feature['properties']['ISO_1'] for feature in features]
     state_iso = [name.split('-')[1] for name in state_iso_original]
@@ -31,8 +30,8 @@ def update_map_on_slider_increment(slider_value,  data):
         colour_map[id] = colour
     return colour_map
 
-def update_aggregated_data_on_slider_increment(slider_value, df_properties):
-    spending = us_layout.get_state_spending(state=None,year=slider_value)
+def update_aggregated_data_on_slider_increment(slider_value, state = None):
+    spending = us_layout.get_state_spending(state,year=slider_value)
     spending = dict(sorted(spending.items(),key= lambda x:x[1], reverse=True))
     #TODO move total to the end
     return [html.P(f'{program} - {locale.currency(spent, grouping=True)}') for program,spent in spending.items()]
