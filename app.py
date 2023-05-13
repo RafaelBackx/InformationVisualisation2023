@@ -40,6 +40,7 @@ disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter
 gdp_data = pd.read_csv('./Data/gdp_data_constant.csv')
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
+server = app.server
 
 ################
 #              #
