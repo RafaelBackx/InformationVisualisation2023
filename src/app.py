@@ -7,6 +7,7 @@ from dash_extensions.javascript import arrow_function, Namespace
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 import plotly.express as px
+import dash_leaflet.express as dlx
 
 import util
 import components
@@ -39,7 +40,25 @@ ns = Namespace("dashExtensions", "default")
 disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
 gdp_data = pd.read_csv('./Data/gdp_data_constant.csv')
 
+fig = px.scatter(
+    data_frame=disaster_data,
+    x='Longitude',
+    y='Latitude',
+    color='Disaster Type',
+    hover_data=['Country', 'Disaster Type']
+)
+
+fig.update_layout(
+    title_text='Natural Disasters by Location',
+    margin=dict(l=0, r=0, t=30, b=0)
+)
+
+
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
+server=app.server
+
+
+
 
 ################
 #              #
@@ -61,11 +80,18 @@ tabs = dbc.Tabs(
 #          #
 ############
 
+geojson = dl.GeoJSON(data=util.get_world_geojson())
+
+
+
 app.layout = html.Div(
     children=[
         tabs,
         html.Div(id="content"),
-        html.Div(id="popup")
+        html.Div(id="popup"),
+        dcc.Graph(figure=fig)  # Add the scatter plot as a dcc.Graph component
+    
+        
     ]
 )
 
@@ -262,3 +288,5 @@ def create_fema_disaster_graph(slider_value):
               prevent_initial_call=True)
 def create_fema_cost_distributions(slider_value):
     return callbacks.create_fema_cost_distribution(slider_value, ['structureType', 'foundationType'])
+
+
