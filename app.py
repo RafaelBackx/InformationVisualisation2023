@@ -6,13 +6,13 @@ from dash import Dash, html, Input, Output, dcc, State, ALL, dash
 from dash_extensions.javascript import arrow_function, Namespace
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
+from flask import Flask
 import plotly.express as px
 
 import util
 import components
 import callbacks
 
-from server import app, server
 from time import sleep
 import converter as state_converter
 
@@ -39,6 +39,7 @@ ns = Namespace("dashExtensions", "default")
 disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
 gdp_data = pd.read_csv('./Data/gdp_data_constant.csv')
 
+server = Flask("Natural Disasters Dashboard")
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
 
 ################
@@ -262,3 +263,6 @@ def create_fema_disaster_graph(slider_value):
               prevent_initial_call=True)
 def create_fema_cost_distributions(slider_value):
     return callbacks.create_fema_cost_distribution(slider_value, ['structureType', 'foundationType'])
+
+if __name__ == "__main__":
+    app.run_server(debug=True)

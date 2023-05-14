@@ -11,7 +11,6 @@ import plotly.express as px
 import util
 import components
 
-from server import app, server
 import converter as converter
 
 ns = Namespace('dashExtensions', 'default')
