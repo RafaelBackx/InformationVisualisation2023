@@ -249,8 +249,9 @@ def update_aggregated_data_on_state_click(slider_value,  data):
 @app.callback(Output('us-aggregated-data', 'children', allow_duplicate=True), Input('usa-states','click_feature'), State('usa-slider', 'value'), prevent_initial_call=True)
 def update_usa_states_aggregated_data_on_click(state_info, slider_value):
     state_name = state_info['properties']['NAME_1']
-    aggregated_data = callbacks.update_aggregated_data_on_slider_increment(slider_value,state=state_name)
-    return aggregated_data
+    # aggregated_data = callbacks.update_aggregated_data_on_slider_increment(slider_value,state=state_name)
+    cost_distributions = callbacks.create_cost_distributions_for_state(state_name)
+    return cost_distributions
 
 @app.callback(Output('fema-disaster-graphs', 'children'), 
               Input('usa-slider', 'value'), 

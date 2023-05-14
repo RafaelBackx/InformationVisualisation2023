@@ -62,6 +62,12 @@ us_state_to_abbrev = {
 abbrev_to_us_state = dict(map(reversed, us_state_to_abbrev.items()))
 
 fema_action_to_disaster = {
+    'Acquisition/Demolition': 'Hydrological',
+    'Acquisition of Vacant Land': 'Hydrological',
+    'Acquisition/Relocation': 'Hydrological',
+    'Other (Specify in Comments)': 'Geophysical',   #! IMPORTANT, if you're reading this: this is a dummy variable and must be changed
+    'Mitigation Reconstruction': 'Geophysical',     #! IMPORTANT, if you're reading this: this is a dummy variable and must be changed
+    'Retro (1/15/2008 - DSG)': 'Geophysical',       #! IMPORTANT, if you're reading this: this is a dummy variable and must be changed
     'Elevation': 'Hydrological',
     'Floodproofed': 'Hydrological',
     'Safe Room/Wind Shelter': 'Meteorological',

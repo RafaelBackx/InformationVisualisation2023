@@ -20,6 +20,30 @@ df_properties = pd.read_json('./Data/preprocessed-fema-properties.json')
 df_projects = pd.read_json('./Data/preprocessed-fema-projects.json')
 df_disasters = pd.read_csv('./Data/Preprocessed-Natural-Disasters.csv', delimiter=';')
 
+def get_disaster_and_fema_cost_distribution_per_state(state):
+    state_disaster_info = df_disasters[df_disasters['us state'] == state]
+    state_fema_info = df_properties[df_properties['state'] == state]
+
+    state_disaster_grouped = state_disaster_info.groupby(['Disaster Subgroup'], as_index=False).sum(numeric_only=True)
+    state_fema_grouped = state_fema_info.groupby(['propertyAction'], as_index=False).sum(numeric_only=True)
+
+    disaster_subgroups = state_disaster_grouped['Disaster Subgroup'].values
+    fema_actions = state_fema_grouped['propertyAction'].values
+
+    disaster_subgroup_map = {}
+    fema_action_map = {}
+
+    for disaster_subgroup in disaster_subgroups:
+        spent_on_disaster = sum(state_disaster_grouped[state_disaster_grouped['Disaster Subgroup'] == disaster_subgroup]["Total Damages, Adjusted (\'000 US$)"], 0)
+        disaster_subgroup_map[disaster_subgroup] = spent_on_disaster
+    
+    for fema_action in fema_actions:
+        spent_on_action = sum(state_fema_grouped[state_fema_grouped['propertyAction'] == fema_action]['actualAmountPaid'], 0)
+        to_prevent_disaster = converter.fema_action_to_disaster[fema_action]
+        fema_action_map[fema_action] = [spent_on_action, to_prevent_disaster]
+    
+    return disaster_subgroup_map, fema_action_map
+
 def compare_deaths_before_and_after_fema(df_disasters):
     fema_date = 1995
     us_disasters = df_disasters[df_disasters['ISO'] == 'USA'].groupby(['Start Year', 'us state'], as_index=False).sum(numeric_only=True)
@@ -167,7 +191,7 @@ us_layout = html.Div(id='us_layout', children=[
                         className='map-card'
                     )
                 ],
-                width=9,
+                width=6,
                 className='column map-column'
             ),
             dbc.Col(
@@ -180,7 +204,7 @@ us_layout = html.Div(id='us_layout', children=[
                         className='aggregated-card'
                     )
                 ],
-                width=3,
+                width=6,
                 className='column aggregated-column'
             )
         ],
