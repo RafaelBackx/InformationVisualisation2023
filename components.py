@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 import dash_leaflet as dl
 
@@ -25,6 +26,24 @@ DISASTER_SUBGROUPS = [
     "Climatological",
     "Meteorological"
 ]
+
+def generate_cost_bar_plots(data,colour_map=None):
+    labels = list(data.keys())
+    values = list(data.values())
+
+    print(labels)
+    print(values)
+    print(colour_map)
+    colour_map = {key: EVENT_COLOURS[value] for key,value in colour_map.items()}
+
+    def get_colour(event):
+        return colour_map[event]
+
+    figure=go.Figure()
+    figure.add_trace(go.Bar(x=labels, y=values,
+                    marker=dict(color = list(map(get_colour, list(colour_map.keys()))))))
+
+    return dcc.Graph(figure=figure)
 
 def generate_aggregated_data_table(df):
     # Fill missing values with 0s

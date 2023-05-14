@@ -6,7 +6,6 @@ from dash import Dash, html, Input, Output, dcc, State, ALL, dash
 from dash_extensions.javascript import arrow_function, Namespace
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
-from flask import Flask
 import plotly.express as px
 import dash_leaflet.express as dlx
 
@@ -14,6 +13,7 @@ import util
 import components
 import callbacks
 
+from server import app, server
 from time import sleep
 import converter as state_converter
 
@@ -54,9 +54,11 @@ fig.update_layout(
 )
 
 
-server = Flask("Natural Disasters Dashboard")
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
 server=app.server
+
+
+
 
 ################
 #              #
@@ -288,5 +290,3 @@ def create_fema_disaster_graph(slider_value):
 def create_fema_cost_distributions(slider_value):
     return callbacks.create_fema_cost_distribution(slider_value, ['structureType', 'foundationType'])
 
-if __name__ == "__main__":
-    app.run_server(debug=True)

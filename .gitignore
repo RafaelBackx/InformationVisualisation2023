@@ -4,6 +4,7 @@
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
+.idea/
 *.py[cod]
 *$py.class
 
@@ -126,8 +127,10 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+venv
+*.pyc
+.DS_Store
 .env
-.venv
 env/
 venv/
 ENV/
