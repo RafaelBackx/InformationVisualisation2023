@@ -82,13 +82,15 @@ def changed_affected_filter(events, current_year, current_filter, country_code =
     # Generate the updated graph
     return components.generate_affected_graph(events, current_year, current_filter)
 
-def changed_gdp_filter(gdp, events, current_year, country_code = None, specific = False):
+def changed_gdp_filter(gdp_data, current_year, country_code = None, specific = False):
     # If a country code is given filter events using the code
     if country_code:
-        events = util.filter_events(events, {'ISO': country_code})
+        gdp_data = util.filter_events(gdp_data, {'ISO': country_code})
+    else:
+        gdp_data = gdp_data.groupby(["Start Year", "Disaster Subgroup"], as_index=False).sum(numeric_only=True)
 
     # Generate the updated graph
-    return components.generate_gdp_graph(gdp, events, current_year, country_code, specific)
+    return components.generate_gdp_graph(gdp_data, current_year, specific)
 
 def show_events_button_clicked(events, current_year, country_code = None):
     # If a country code is given filter events using the code
@@ -105,6 +107,9 @@ def slider_change(events, gdp_data, current_year, affected_filter, gdp_filter, c
     # If a country code is given filter events using the code
     if country_code:
         events = util.filter_events(events, {'ISO': country_code})
+        gdp_data = util.filter_events(gdp_data, {'ISO': country_code})
+    else:
+        gdp_data = gdp_data.groupby(["Start Year", "Disaster Subgroup"], as_index=False).sum(numeric_only=True)
 
     # Filter the events that contain location data for the map
     map_data = util.filter_events(events, {"Start Year": current_year}, True)
@@ -116,7 +121,7 @@ def slider_change(events, gdp_data, current_year, affected_filter, gdp_filter, c
     events_geojson = util.convert_events_to_geojson(map_data)
 
     # Generate the gdp figure
-    gdp_fig = components.generate_gdp_graph(gdp_data, events, current_year, country_code, gdp_filter != "general")
+    gdp_fig = components.generate_gdp_graph(gdp_data, current_year, gdp_filter != "general")
 
     # Generate the affected figure
     affected_fig = components.generate_affected_graph(events, current_year, affected_filter)
