@@ -529,7 +529,8 @@ def generate_country_popup(disaster_data, country, current_year):
         ],
         id=f"{country_iso}-modal",
         fullscreen=True,
-        is_open=True)
+        is_open=True,
+        scrollable=True)
     return popup
 
 
