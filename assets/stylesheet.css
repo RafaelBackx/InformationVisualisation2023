@@ -201,4 +201,8 @@
     .modal-content {
         overflow-y: scroll !important;
     }
+
+    .show-events {
+        position: initial;
+    }
 }
