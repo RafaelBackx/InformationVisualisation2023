@@ -123,6 +123,7 @@ map = dl.Map(
         dl.GeoJSON(data={},
                    id="events",
                    options=dict(pointToLayer=ns("draw_marker"))),
+        dl.GestureHandling(),
         map_legend,
         world_slider_wrapper
     ],
