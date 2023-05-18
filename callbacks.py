@@ -87,7 +87,7 @@ def changed_gdp_filter(gdp_data, current_year, country_code = None, specific = F
     if country_code:
         gdp_data = util.filter_events(gdp_data, {'ISO': country_code})
     else:
-        gdp_data = gdp_data.groupby(["Start Year", "Disaster Subgroup"], as_index=False).sum(numeric_only=True)
+        gdp_data = gdp_data.groupby(["Start Year", "Disaster Subgroup", "Disaster Type"], as_index=False).sum(numeric_only=True)
 
     # Generate the updated graph
     return components.generate_gdp_graph(gdp_data, current_year, specific)

@@ -130,9 +130,9 @@ map = dl.Map(
     id="map")
 
 world_gdp_graph = dcc.Graph(
-    id="world-gdp-graph", style={"height": "30vh", "width": "100%", "margin-top": "5px"})
+    id="world-gdp-graph", style={"height": "30vh", "width": "100%", "marginTop": "5px"})
 world_affected_graph = dcc.Graph(
-    id="world-affected-graph", style={"height": "30vh", "width": "100%", "margin-top": "5px"})
+    id="world-affected-graph", style={"height": "30vh", "width": "100%", "marginTop": "5px"})
 
 home_layout = html.Div(
     children=[
@@ -204,7 +204,7 @@ home_layout = html.Div(
                                             id="world-gdp-tabs",
                                             active_tab="general"
                                         ),
-                                        world_gdp_graph
+                                        world_gdp_graph,
                                     ],
                                     className="gdp-cardbody")
                             ],

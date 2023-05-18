@@ -136,6 +136,7 @@ def generate_gdp_graph(gdp_data, current_year, categories = False):
     gdp_data = gdp_data[gdp_data["Start Year"] <= current_year]
     
     if categories:
+        gdp_data = gdp_data.groupby(["Start Year", "Disaster Subgroup"], as_index=False).sum(numeric_only=True)
         gdp_fig = px.line(gdp_data, 'Start Year', 'share', color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
     else:
         gdp_data = gdp_data.groupby("Start Year", as_index=False).sum()
