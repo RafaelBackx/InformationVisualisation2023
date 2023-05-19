@@ -254,13 +254,14 @@ def country_show_events(n_clicks, io, current_year, country):
     country_code = country["properties"]["ISO_A3"]
     return callbacks.show_events_button_clicked(disaster_data, current_year, country_code), is_open
 
-# @app.callback(Output('usa-states', 'hideout'), 
-#               State('usa-states', 'data'))
-# def update_aggregated_data_on_state_click(slider_value,  data):
-#     colour_map = callbacks.update_map_on_slider_increment(slider_value,data)
-#     # aggregated_data = callbacks.update_aggregated_data_on_slider_increment(slider_value)
+@app.callback(Output('usa-states', 'hideout'),
+              Input('usa-states', 'click_feature'), 
+              State('usa-states', 'hideout'), prevent_initial_call=True)
+def update_aggregated_data_on_state_click(clicked_state,  hideout):
+    state_name = clicked_state['properties']['ISO_1']
+    hideout['active_state'] = state_name
 
-#     return colour_map
+    return hideout
 
 @app.callback(Output('us-aggregated-data', 'children', allow_duplicate=True), Input('usa-states','click_feature'),prevent_initial_call='initial_duplicate')
 def update_usa_states_aggregated_data_on_click(state_info):

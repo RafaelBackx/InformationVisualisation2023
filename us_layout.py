@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import dash_leaflet as dl
+import dash_leaflet.express as dlx
 import dash_bootstrap_components as dbc
 from dash import Dash, html, Input, Output, dcc, State, ALL, dash
 from dash_extensions.javascript import arrow_function, Namespace
@@ -206,34 +207,18 @@ def generate_states_colours(data):
     state_names = [converter.abbrev_to_us_state[abbrev] for abbrev in state_iso]
 
     colour_map = {}
-    ratio_sum = 0
     for idx,state_name in enumerate(state_names):
         id = state_iso_original[idx]
-        # state_spending = get_state_spending(state_name)
-        # total_spent_state = state_spending['total']
-        total_spent_state = df_properties[df_properties['state'] == state_name].sum(numeric_only=True)['actualAmountPaid']
+        state_spending = get_state_spending(state_name)
+        total_spent_state = state_spending['total']
         total_spent_us = get_total_spent()
         total_spent_us = max(total_spent_us, 1)
-        colour = util.ratio_to_gradient(total_spent_state/total_spent_us)
-        colour_map[id] = colour
-        print(f'{state_name} with {total_spent_state/total_spent_us}')
-        print(f'{state_name} spent {total_spent_state}')
-        ratio_sum += total_spent_state/total_spent_us
-    print(f'total ratio sum: {ratio_sum}')
+        # colour = util.ratio_to_gradient(total_spent_state/total_spent_us)
+        colour_map[id] = (total_spent_state/total_spent_us) * 100
     return colour_map
 
 death_graph = dcc.Graph(id='death_graph', figure=compare_deaths_before_and_after_fema(df_disasters))
 mitigation_graph = dcc.Graph(id='mitigation-graph', figure=compare_mitigation_and_damages_graph(df_disasters))
-
-usa_slider = dcc.Slider(min=1995,
-                          max=2023,
-                          step=1,
-                          value=1995,
-                          marks=None,
-                          tooltip={"placement": "bottom",
-                                   "always_visible": True},
-                          id="usa-slider",
-                          className="slider")
 
 usa_slider_wrapper = dbc.Row(
     children=[
@@ -245,13 +230,19 @@ usa_slider_wrapper = dbc.Row(
             width="auto"),
         dbc.Col(
             children=[
-                usa_slider
             ],
             className="column")
     ], className="slider-container"
 )
 
 usa_states_data = util.get_country_data('USA')
+
+classes = [0,5,10,15,20,25]
+colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026']
+style = dict(weight=2, opacity=1, color='black', dashArray='', fillOpacity=0.7)
+ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
+colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
+
 
 map = dl.Map(
     maxBounds=[[-90, -180], [90, 180]],
@@ -267,12 +258,13 @@ map = dl.Map(
         dl.GeoJSON(
             data=usa_states_data,
             id="usa-states",
-            hideout=generate_states_colours(usa_states_data),
+            hideout=dict(colorscale=colorscale,classes=classes,style=style,active_state='',ratio_map=generate_states_colours(usa_states_data)),
             # Invisible polygons,
             options=dict(style = ns('draw_polygon')),
             zoomToBounds=True,
             hoverStyle=arrow_function(dict(weight=2, color='#666', dashArray=''))),  # Gray border on hover (line_thickness, color, line_style)
-        usa_slider_wrapper
+        usa_slider_wrapper,
+        colorbar
     ],
     style={"width": "100%", "height": "100%", "display": "block"},
     id="usa-map")
