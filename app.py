@@ -261,26 +261,26 @@ def country_show_events(n_clicks, io, current_year, country):
 def update_aggregated_data_on_state_click(clicked_state,  hideout):
     global current_state
     state_name = clicked_state['properties']['ISO_1']
-    # print(f'state_name: {state_name}')
-    # print(f'current state: {current_state}')
-    if (state_name == current_state):
-        hideout['active_state'] = ''
-    else:
-        hideout['active_state'] = state_name
-        
+    hideout['active_state'] = state_name
     current_state = state_name
     return hideout
 
-@app.callback(Output('us-aggregated-data', 'children', allow_duplicate=True),Input("usa-states", "click_feature"), State('usa-states','click_feature'),prevent_initial_call='initial_duplicate')
-def update_usa_states_aggregated_data_on_click(x,state_info):
-    # global current_state
+@app.callback([Output('us-cost-distribution-subgroups', 'children', allow_duplicate=True), Output('us-cost-distribution-mitigations', 'children'), Output('usa-states', 'click_feature'), Output('usa-states', 'hideout', allow_duplicate=True)], Input('usa-states','n_clicks'), State('usa-states', 'click_feature'), State('usa-states', 'hideout'),prevent_initial_call='initial_duplicate')
+def update_usa_states_aggregated_data_on_click(_n_clicks,state_info,hideout):
+    global current_state
+    current_feature = state_info
     if (state_info):
         state_name = state_info['properties']['NAME_1']
     else:
         state_name = None
-    # aggregated_data = callbacks.update_aggregated_data_on_slider_increment(slider_value,state=state_name)
+    if state_info and current_state == state_info['properties']['ISO_1']:
+        current_state = None
+        state_name = None
+        current_feature = None
+        hideout['active_state'] = ''
+
     cost_distributions = callbacks.create_cost_distributions_for_state(state_name)
-    return cost_distributions
+    return cost_distributions[0], cost_distributions[1], current_feature, hideout
 
 @app.callback(Output("info", "children"), [Input("usa-states", "hover_feature")])
 def info_hover(feature):
