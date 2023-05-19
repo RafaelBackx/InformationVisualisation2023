@@ -537,3 +537,14 @@ def create_tab_with_fig(fig,category):
     return dbc.Tab(children=[
         dcc.Graph(figure=fig)
     ], label=category)
+
+def generate_state_info(df, feature = None):
+    header = [html.H4("% of money spent on mitigation in comparison with entire U.S.")]
+    if not feature:
+        return header + [html.P("Hover over a state")]
+    else:
+        state_name = feature["properties"]["NAME_1"]
+        total_spent = util.get_total_spent(df)
+        state_spent = util.get_state_spending(state_name, df)["total"]
+    return header + [html.B(state_name), html.Br(),
+                     "{:.3f}%".format((state_spent / total_spent) * 100)]

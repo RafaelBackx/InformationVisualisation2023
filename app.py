@@ -39,6 +39,8 @@ ns = Namespace("dashExtensions", "default")
 
 disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
 gdp_data = pd.read_csv('./Data/gdp_data.csv')
+df_properties = pd.read_json('./Data/preprocessed-fema-properties.json')
+df_projects = pd.read_json('./Data/preprocessed-fema-projects.json')
 
 # fig = px.scatter(
 #     data_frame=disaster_data,
@@ -275,7 +277,7 @@ def update_usa_states_aggregated_data_on_click(state_info):
 
 @app.callback(Output("info", "children"), [Input("usa-states", "hover_feature")])
 def info_hover(feature):
-    return us_layout.get_info(feature)
+    return callbacks.state_hover(feature, df_properties)
 
 if __name__ == "__main__":
     app.run_server(debug=True)
