@@ -19,8 +19,8 @@ def create_cost_distributions_for_state(state):
     fema_cost_distribution = {key: value[0] for key,value in fema_cost_distribution.items()}
     disaster_map = {key:key for key,_ in disaster_cost_distribution.items()}
 
-    disaster_bar_plot = components.generate_cost_bar_plots(disaster_cost_distribution, disaster_map)
-    fema_bar_plot = components.generate_cost_bar_plots(fema_cost_distribution, fema_disaster_map)
+    disaster_bar_plot = components.generate_cost_bar_plots(disaster_cost_distribution, disaster_map,title='Disaster cost distribution over subtypes')
+    fema_bar_plot = components.generate_cost_bar_plots(fema_cost_distribution, fema_disaster_map,title='cost distribution over different mitigation actions')
     
     div = html.Div(children=[
         dbc.Col(children=[disaster_bar_plot], width=6),

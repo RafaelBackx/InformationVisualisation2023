@@ -7,6 +7,7 @@ from dash_extensions.javascript import arrow_function, Namespace
 from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
 import plotly.express as px
+import plotly.graph_objects as go
 
 import util
 import components
@@ -20,8 +21,12 @@ df_projects = pd.read_json('./Data/preprocessed-fema-projects.json')
 df_disasters = pd.read_csv('./Data/Preprocessed-Natural-Disasters.csv', delimiter=';')
 
 def get_disaster_and_fema_cost_distribution_per_state(state):
-    state_disaster_info = df_disasters[df_disasters['us state'] == state]
-    state_fema_info = df_properties[df_properties['state'] == state]
+    if (state):
+        state_disaster_info = df_disasters[df_disasters['us state'] == state]
+        state_fema_info = df_properties[df_properties['state'] == state]
+    else:
+        state_disaster_info = df_disasters
+        state_fema_info = df_properties
 
     state_disaster_grouped = state_disaster_info.groupby(['Disaster Subgroup'], as_index=False).sum(numeric_only=True)
     state_fema_grouped = state_fema_info.groupby(['propertyAction'], as_index=False).sum(numeric_only=True)
@@ -38,7 +43,10 @@ def get_disaster_and_fema_cost_distribution_per_state(state):
     
     for fema_action in fema_actions:
         spent_on_action = sum(state_fema_grouped[state_fema_grouped['propertyAction'] == fema_action]['actualAmountPaid'], 0)
-        to_prevent_disaster = converter.fema_action_to_disaster[fema_action]
+        if (fema_action in converter.fema_action_to_disaster):
+            to_prevent_disaster = converter.fema_action_to_disaster[fema_action]
+        else:
+            continue
         fema_action_map[fema_action] = [spent_on_action, to_prevent_disaster]
     
     return disaster_subgroup_map, fema_action_map
@@ -46,32 +54,35 @@ def get_disaster_and_fema_cost_distribution_per_state(state):
 def compare_deaths_before_and_after_fema(df_disasters):
     fema_date = 1995
     us_disasters = df_disasters[df_disasters['ISO'] == 'USA'].groupby(['Start Year', 'us state'], as_index=False).sum(numeric_only=True)
-    before_fema = us_disasters[us_disasters['Start Year'] <= fema_date].groupby('us state', as_index=False).sum(numeric_only=True)
+    before_fema = us_disasters[us_disasters['Start Year'] < fema_date].groupby('us state', as_index=False).sum(numeric_only=True)
     number_of_deaths_before_fema = before_fema['Total Deaths'].sum()
     number_of_events_per_year_before_fema = len(us_disasters[us_disasters['Start Year'] <= fema_date])
-    death_ratio_before = number_of_deaths_before_fema/number_of_events_per_year_before_fema
+    death_ratio_before = np.round(number_of_deaths_before_fema/number_of_events_per_year_before_fema)
 
-    after_fema = us_disasters[us_disasters['Start Year'] > fema_date].groupby('us state', as_index=False).sum(numeric_only=True)
+    after_fema = us_disasters[us_disasters['Start Year'] >= fema_date].groupby('us state', as_index=False).sum(numeric_only=True)
     number_of_deaths_after_fema = after_fema['Total Deaths'].sum()
     number_events_per_year_after_fema = len(us_disasters[us_disasters['Start Year'] > fema_date])
-    death_ratio_after = number_of_deaths_after_fema / number_events_per_year_after_fema
+    death_ratio_after = np.round(number_of_deaths_after_fema / number_events_per_year_after_fema)
 
     new_df = pd.DataFrame(columns=['state', 'Deaths before Fema', 'Deaths after Fema'])
     new_df['state'] = after_fema['us state']
     new_df['Deaths before Fema'] = new_df.apply(lambda row: sum(before_fema[before_fema['us state'] == row['state']]['Total Deaths'], 0), axis=1)
     new_df['Deaths after Fema'] = new_df.apply(lambda row: sum(after_fema[after_fema['us state'] == row['state']]['Total Deaths'],0), axis=1)
-    fig = px.bar(new_df,x='state', y=['Deaths before Fema', 'Deaths after Fema'], log_y=True)
-    fig.add_annotation(text=f'Death ratio before and after Fema intervention<br>Death ratio before Fema: {death_ratio_before}<br>Death ratio after Fema: {death_ratio_after}',
-                       align='left',
-                       showarrow=False,
-                       xref='paper',
-                       yref='paper',
-                       x=2,
-                       y=0.8,
-                       bordercolor='black',
-                       borderwidth=1)
+    fig = go.Figure(data=[
+        go.Bar(x=new_df['state'], y=new_df['Deaths before Fema'], name='Deaths before Fema'),
+        go.Bar(x=new_df['state'], y=new_df['Deaths after Fema'], name='Deaths after Fema')
+    ])
+    fig.update_layout(barmode='group',title=f"Death toll comparison before Fema was introduced and after (Fema's first datapoint dates from 1995)")
+    fig.add_annotation(text=f'Average deaths per disaser <br>before Fema: {death_ratio_before} <br>after Fema: {death_ratio_after}', 
+                        align='left',
+                        showarrow=False,
+                        xref='paper',
+                        yref='paper',
+                        x=1.12,
+                        y=0.8,
+                        bordercolor='black',
+                        borderwidth=1)
     return fig
-
 
 def compare_mitigation_and_damages_graph(df_disasters):
     us_disasters = df_disasters[df_disasters['ISO'] == 'USA']
@@ -209,53 +220,53 @@ us_layout = html.Div(id='us_layout', children=[
         ],
         className='map-row'
     ),
+    # dbc.Row(
+    #     children=[
+    #         dbc.Col(
+    #             children=[
+    #                 dbc.Card(
+    #                     children=[
+    #                         dbc.CardHeader('Fema actions to disaster costs'),
+    #                         dbc.CardBody(children=[dbc.Tabs(id='fema-disaster-graphs')])
+    #                     ]
+    #                 )
+    #             ],
+    #             width=6,
+    #             className='column fema-column'
+    #         ),
+    #         dbc.Col(
+    #             children=[
+    #                 dbc.Card(
+    #                     children=[
+    #                         dbc.CardHeader('Fema Cost distribution - '),
+    #                         dbc.CardBody(
+    #                             id='fema-cost-distribution',
+    #                             children=[
+    #                                 dbc.Tabs(id='fema-cost-distribution-tabs')
+    #                             ]
+    #                         )
+    #                     ]
+    #                 )
+    #             ],
+    #             width=6,
+    #             className='column'
+    #         )
+    #     ]
+    # ),
     dbc.Row(
         children=[
-            dbc.Col(
-                children=[
-                    dbc.Card(
-                        children=[
-                            dbc.CardHeader('Fema actions to disaster costs'),
-                            dbc.CardBody(children=[dbc.Tabs(id='fema-disaster-graphs')])
-                        ]
-                    )
-                ],
-                width=6,
-                className='column fema-column'
-            ),
-            dbc.Col(
-                children=[
-                    dbc.Card(
-                        children=[
-                            dbc.CardHeader('Fema Cost distribution - '),
-                            dbc.CardBody(
-                                id='fema-cost-distribution',
-                                children=[
-                                    dbc.Tabs(id='fema-cost-distribution-tabs')
-                                ]
-                            )
-                        ]
-                    )
-                ],
-                width=6,
-                className='column'
-            )
-        ]
-    ),
-    dbc.Row(
-        children=[
-            dbc.Col(
-                children=[
-                    dbc.Card(
-                        children=[
-                            dbc.CardHeader('Comparison Mitigation vs damages'),
-                            dbc.CardBody(children=[mitigation_graph])
-                        ]
-                    )
-                ],
-                width=6,
-                className='column fema-column'
-            ),
+            # dbc.Col(
+            #     children=[
+            #         dbc.Card(
+            #             children=[
+            #                 dbc.CardHeader('Comparison Mitigation vs damages'),
+            #                 dbc.CardBody(children=[mitigation_graph])
+            #             ]
+            #         )
+            #     ],
+            #     width=6,
+            #     className='column fema-column'
+            # ),
             dbc.Col(
                 children=[
                     dbc.Card(
@@ -265,7 +276,7 @@ us_layout = html.Div(id='us_layout', children=[
                         ]
                     )       
                 ],
-                width=6,
+                width=12,
                 className='column fema-column'
             )
         ]
@@ -324,7 +335,6 @@ def compare_fema_actions_to_disaster_costs(df_disasters: pd.DataFrame, year: int
         spent_map[row_year][disaster_subgroup] += row['actualAmountPaid']
 
     disaster_spent['Total Mitigated'] = disaster_spent.apply(lambda x: spent_map[x['Start Year']][x['Disaster Subgroup']], axis=1)
-    print(disaster_spent)
     return disaster_spent
 
 def get_fema_cost_distribution(state,year,category):

@@ -65,9 +65,9 @@ fema_action_to_disaster = {
     'Acquisition/Demolition': 'Hydrological',
     'Acquisition of Vacant Land': 'Hydrological',
     'Acquisition/Relocation': 'Hydrological',
-    'Other (Specify in Comments)': 'Geophysical',   #! IMPORTANT, if you're reading this: this is a dummy variable and must be changed
+    # 'Other (Specify in Comments)': 'Geophysical',   #! IMPORTANT, if you're reading this: this is a dummy variable and must be changed
     'Mitigation Reconstruction': 'Geophysical',     #! IMPORTANT, if you're reading this: this is a dummy variable and must be changed
-    'Retro (1/15/2008 - DSG)': 'Geophysical',       #! IMPORTANT, if you're reading this: this is a dummy variable and must be changed
+    # 'Retro (1/15/2008 - DSG)': 'Geophysical',       #! IMPORTANT, if you're reading this: this is a dummy variable and must be changed
     'Elevation': 'Hydrological',
     'Floodproofed': 'Hydrological',
     'Safe Room/Wind Shelter': 'Meteorological',
@@ -76,5 +76,5 @@ fema_action_to_disaster = {
     'Wind Retrofit': 'Meteorological',
     'Wind Retrofit Advanced(A-P804)': 'Meteorological',
     'Wind Retrofit Basic (B-P804)': 'Meteorological',
-    'Wind Retrofit Estimated(ES-P804)	': 'Meteorological'
+    'Wind Retrofit Estimated(ES-P804)': 'Meteorological',
 }
