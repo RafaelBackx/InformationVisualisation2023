@@ -15,15 +15,23 @@ window.dashExtensions = Object.assign({}, window.dashExtensions, {
             return L.marker(latlng, {icon: event})
         },
         draw_polygon: function(feature,context){
-            console.log('hello from draw_polygon')
+            const {classes, colorscale, style, active_state, ratio_map} = context.props.hideout;  // get props from hideout
             let state = feature['properties']['ISO_1'];
-            console.log(state);
-            let colour_map = context.props.hideout;
-            if (colour_map != undefined){
-                let colour = colour_map[state]
-                console.log(colour);
-                return {weight: 2, color: colour, dashArray: ''};
+            const value = ratio_map[state]  // get value the determines the color
+            for (let i = 0; i < classes.length; ++i) {
+                if (value > classes[i]) {
+                    style.fillColor = colorscale[i];  // set the fill color according to the class
+                }
             }
-        }
+            if (state == active_state){
+                style.weight = 5
+                style.dashArray = '5'
+            }else{
+                style.weight = 2
+                style.dashArray = ''
+            }
+            return style;
+        },
+
     }
 });

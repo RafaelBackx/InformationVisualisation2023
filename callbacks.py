@@ -13,6 +13,12 @@ locale.setlocale(locale.LC_ALL, '')
 
 from dash import html
 
+def update_map_on_slider_increment(clicked_state,data):
+    colour_map = us_layout.generate_states_colours(data)
+    print({'active_state': clicked_state, 'colour_map': colour_map})
+    return {'active_state': clicked_state, 'colour_map': colour_map}
+
+
 def create_cost_distributions_for_state(state):
     disaster_cost_distribution, fema_cost_distribution = us_layout.get_disaster_and_fema_cost_distribution_per_state(state)
     fema_disaster_map = {key: value[1] for key,value in fema_cost_distribution.items()}
