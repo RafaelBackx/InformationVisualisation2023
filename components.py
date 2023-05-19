@@ -41,6 +41,7 @@ def generate_cost_bar_plots(data,colour_map=None,log=False):
     figure=go.Figure()
     figure.add_trace(go.Bar(x=labels, y=values,
                     marker=dict(color = list(map(get_colour, list(colour_map.keys()))))))
+    figure.update_layout(hovermode="x unified")
     return dcc.Graph(figure=figure, style={"height": "80%"})
 
 def generate_aggregated_data_table(df):
