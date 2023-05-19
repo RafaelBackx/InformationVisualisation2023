@@ -41,6 +41,7 @@ def generate_cost_bar_plots(data,colour_map=None,log=False):
     figure=go.Figure()
     figure.add_trace(go.Bar(x=labels, y=values,
                     marker=dict(color = list(map(get_colour, list(colour_map.keys()))))))
+    figure.update_layout(hovermode="x unified")
     return dcc.Graph(figure=figure, style={"height": "80%"})
 
 def generate_aggregated_data_table(df):
@@ -537,3 +538,14 @@ def create_tab_with_fig(fig,category):
     return dbc.Tab(children=[
         dcc.Graph(figure=fig)
     ], label=category)
+
+def generate_state_info(df, feature = None):
+    header = [html.H4("% of money spent on mitigation in comparison with entire U.S.")]
+    if not feature:
+        return header + [html.P("Hover over a state")]
+    else:
+        state_name = feature["properties"]["NAME_1"]
+        total_spent = util.get_total_spent(df)
+        state_spent = util.get_state_spending(state_name, df)["total"]
+    return header + [html.B(state_name), html.Br(),
+                     "{:.3f}%".format((state_spent / total_spent) * 100)]

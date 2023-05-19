@@ -106,3 +106,6 @@ def slider_change(events, gdp_data, current_year, affected_filter, gdp_filter, c
     aggregated_data = components.generate_aggregated_data_table(yearly_data)
 
     return events_geojson, gdp_fig, affected_fig, aggregated_data
+
+def state_hover(feature, df):
+    return components.generate_state_info(df, feature)

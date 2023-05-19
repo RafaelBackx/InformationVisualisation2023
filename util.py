@@ -148,3 +148,32 @@ def format_large_number(number, float = True):
         return f"{number:,}"
     else:
         return f"{number:,.0f}"
+    
+
+def get_state_spending(state, df_properties):
+    if (state):
+        state_properties = df_properties[(df_properties['state'] == state)]
+    else:
+        state_properties = df_properties
+
+    state_properties_grouped = state_properties.groupby(['programArea'], as_index=False).sum(numeric_only=True)
+
+    different_programs = ['FMA','HMGP', 'LPDM', 'PDM', 'RFC', 'SRL']
+    state_spending_map = {}
+    total_spending = 0
+    for program in different_programs:
+        amount_spent = state_properties_grouped[state_properties_grouped['programArea'] == program]['actualAmountPaid'].values
+        if (len(amount_spent) > 0):
+            amount_spent = amount_spent[0]
+        else:
+            amount_spent = 0
+        state_spending_map[program] = amount_spent
+        total_spending += amount_spent
+    state_spending_map['total'] = total_spending
+
+    return state_spending_map
+
+def get_total_spent(df_properties):
+    total_properties = df_properties.sum(numeric_only=True)
+    total_spent = total_properties['actualAmountPaid']
+    return total_spent
