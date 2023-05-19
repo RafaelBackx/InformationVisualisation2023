@@ -37,6 +37,7 @@ DISASTER_SUBGROUPS = [
 
 ns = Namespace("dashExtensions", "default")
 
+current_state = None
 disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
 gdp_data = pd.read_csv('./Data/gdp_data.csv')
 
@@ -258,13 +259,21 @@ def country_show_events(n_clicks, io, current_year, country):
               Input('usa-states', 'click_feature'), 
               State('usa-states', 'hideout'), prevent_initial_call=True)
 def update_aggregated_data_on_state_click(clicked_state,  hideout):
+    global current_state
     state_name = clicked_state['properties']['ISO_1']
-    hideout['active_state'] = state_name
-
+    # print(f'state_name: {state_name}')
+    # print(f'current state: {current_state}')
+    if (state_name == current_state):
+        hideout['active_state'] = ''
+    else:
+        hideout['active_state'] = state_name
+        
+    current_state = state_name
     return hideout
 
-@app.callback(Output('us-aggregated-data', 'children', allow_duplicate=True), Input('usa-states','click_feature'),prevent_initial_call='initial_duplicate')
-def update_usa_states_aggregated_data_on_click(state_info):
+@app.callback(Output('us-aggregated-data', 'children', allow_duplicate=True),Input('usa-states', 'n_clicks'), State('usa-states','click_feature'),prevent_initial_call='initial_duplicate')
+def update_usa_states_aggregated_data_on_click(n_clicks,state_info):
+    global current_state
     if (state_info):
         state_name = state_info['properties']['NAME_1']
     else:
