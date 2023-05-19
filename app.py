@@ -254,15 +254,7 @@ def country_show_events(n_clicks, io, current_year, country):
     country_code = country["properties"]["ISO_A3"]
     return callbacks.show_events_button_clicked(disaster_data, current_year, country_code), is_open
 
-# @app.callback(Output('usa-states', 'hideout'), 
-#               State('usa-states', 'data'))
-# def update_aggregated_data_on_state_click(slider_value,  data):
-#     colour_map = callbacks.update_map_on_slider_increment(slider_value,data)
-#     # aggregated_data = callbacks.update_aggregated_data_on_slider_increment(slider_value)
-
-#     return colour_map
-
-@app.callback(Output('us-aggregated-data', 'children', allow_duplicate=True), Input('usa-states','click_feature'),prevent_initial_call='initial_duplicate')
+@app.callback(Output('us-cost-distribution-subgroups', 'children', allow_duplicate=True), Output('us-cost-distribution-mitigations', 'children'), Input('usa-states','click_feature'),prevent_initial_call='initial_duplicate')
 def update_usa_states_aggregated_data_on_click(state_info):
     if (state_info):
         state_name = state_info['properties']['NAME_1']
@@ -271,18 +263,6 @@ def update_usa_states_aggregated_data_on_click(state_info):
     # aggregated_data = callbacks.update_aggregated_data_on_slider_increment(slider_value,state=state_name)
     cost_distributions = callbacks.create_cost_distributions_for_state(state_name)
     return cost_distributions
-
-@app.callback(Output('fema-disaster-graphs', 'children'), 
-              Input('usa-slider', 'value'), 
-              prevent_initial_call=True)
-def create_fema_disaster_graph(slider_value):
-    return callbacks.create_fema_disaster_graph(disaster_data, slider_value)
-
-@app.callback(Output('fema-cost-distribution-tabs', 'children'), 
-              Input('usa-slider', 'value'), 
-              prevent_initial_call=True)
-def create_fema_cost_distributions(slider_value):
-    return callbacks.create_fema_cost_distribution(slider_value, ['structureType', 'foundationType'])
 
 if __name__ == "__main__":
     app.run_server(debug=True)

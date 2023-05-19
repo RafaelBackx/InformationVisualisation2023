@@ -125,7 +125,6 @@ def lat_long_to_state(lat,long):
     return abbrev_to_us_state[abrev]
 
 def ratio_to_gradient(ratio):
-    # print(ratio)
     colour_map = mpl.colormaps['YlOrRd'].resampled(8)
     colour = colour_map(1-ratio)
     colour = [c * 255 for c in colour]

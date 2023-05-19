@@ -48,7 +48,6 @@ def get_total_spent():
     total_spent = total_properties['actualAmountPaid']
     return total_spent
 
-#TODO add year to function
 def compare_fema_actions_to_disaster_costs(df_disasters: pd.DataFrame, year: int) -> pd.DataFrame:
     # calculate total costs per disaster subgroup
     df_disasters_us = df_disasters[df_disasters['ISO'] == 'USA']
@@ -209,47 +208,16 @@ def generate_states_colours(data):
     ratio_sum = 0
     for idx,state_name in enumerate(state_names):
         id = state_iso_original[idx]
-        # state_spending = get_state_spending(state_name)
-        # total_spent_state = state_spending['total']
         total_spent_state = df_properties[df_properties['state'] == state_name].sum(numeric_only=True)['actualAmountPaid']
         total_spent_us = get_total_spent()
         total_spent_us = max(total_spent_us, 1)
         colour = util.ratio_to_gradient(total_spent_state/total_spent_us)
         colour_map[id] = colour
-        print(f'{state_name} with {total_spent_state/total_spent_us}')
-        print(f'{state_name} spent {total_spent_state}')
         ratio_sum += total_spent_state/total_spent_us
-    print(f'total ratio sum: {ratio_sum}')
     return colour_map
 
 death_graph = dcc.Graph(id='death_graph', figure=compare_deaths_before_and_after_fema(df_disasters))
 mitigation_graph = dcc.Graph(id='mitigation-graph', figure=compare_mitigation_and_damages_graph(df_disasters))
-
-usa_slider = dcc.Slider(min=1995,
-                          max=2023,
-                          step=1,
-                          value=1995,
-                          marks=None,
-                          tooltip={"placement": "bottom",
-                                   "always_visible": True},
-                          id="usa-slider",
-                          className="slider")
-
-usa_slider_wrapper = dbc.Row(
-    children=[
-        dbc.Col(
-            children=[
-                # animation_button
-            ],
-            className="column",
-            width="auto"),
-        dbc.Col(
-            children=[
-                usa_slider
-            ],
-            className="column")
-    ], className="slider-container"
-)
 
 usa_states_data = util.get_country_data('USA')
 
@@ -272,7 +240,6 @@ map = dl.Map(
             options=dict(style = ns('draw_polygon')),
             zoomToBounds=True,
             hoverStyle=arrow_function(dict(weight=2, color='#666', dashArray=''))),  # Gray border on hover (line_thickness, color, line_style)
-        usa_slider_wrapper
     ],
     style={"width": "100%", "height": "100%", "display": "block"},
     id="usa-map")
@@ -291,24 +258,39 @@ us_layout = html.Div(id='us_layout', children=[
                         className='map-card'
                     )
                 ],
-                width=6,
-                className='column map-column'
+                className="column map-column us-map-column"
+            )
+        ],
+        className="map-row us-map-row"
+    ),
+    dbc.Row(
+        children=[
+            dbc.Col(
+                children=[
+                    dbc.Card(
+                        children=[
+                            dbc.CardHeader("Disaster cost distribution over subgroups"),
+                            dbc.CardBody(children=[html.Div(id="us-cost-distribution-subgroups")])
+                        ]
+                    )
+                ],
+                className="column gdp-column",
+                width=6
             ),
             dbc.Col(
                 children=[
                     dbc.Card(
                         children=[
-                            dbc.CardHeader("Aggregated Data"),
-                            dbc.CardBody(children=[html.Div(id='us-aggregated-data')])
-                        ],
-                        className='aggregated-card'
+                            dbc.CardHeader("Disaster cost distribution over mitigations"),
+                            dbc.CardBody(children=[html.Div(id="us-cost-distribution-mitigations")])
+                        ]
                     )
                 ],
-                width=6,
-                className='column aggregated-column'
+                className="column affected-column",
+                width=6
             )
         ],
-        className='map-row'
+        className="graphs-row us-graphs-row"
     ),
     dbc.Row(
         children=[
@@ -324,6 +306,6 @@ us_layout = html.Div(id='us_layout', children=[
                 width=12,
                 className='column fema-column'
             )
-        ]
-    )
+        ],
+        className="graphs-row us-graphs-row")
 ])

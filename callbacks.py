@@ -18,21 +18,9 @@ def create_cost_distributions_for_state(state):
     fema_disaster_map = {key: value[1] for key,value in fema_cost_distribution.items()}
     fema_cost_distribution = {key: value[0] for key,value in fema_cost_distribution.items()}
     disaster_map = {key:key for key,_ in disaster_cost_distribution.items()}
-
-    disaster_bar_plot = components.generate_cost_bar_plots(disaster_cost_distribution, disaster_map,title='Disaster cost distribution over subtypes')
-    fema_bar_plot = components.generate_cost_bar_plots(fema_cost_distribution, fema_disaster_map,title='cost distribution over different mitigation actions')
-    
-    div = html.Div(children=[
-        dbc.Col(children=[disaster_bar_plot], width=6),
-        dbc.Col(children=[fema_bar_plot], width=6)
-    ], style={'display': 'flex', 'flex-direction': 'row', 'maxHeight': '25vh'})
-    return div
-
-def update_aggregated_data_on_slider_increment(slider_value, state = None):
-    spending = us_layout.get_state_spending(state,year=slider_value)
-    spending = dict(sorted(spending.items(),key= lambda x:x[1], reverse=True))
-    #TODO move total to the end
-    return [html.P(f'{program} - {locale.currency(spent, grouping=True)}') for program,spent in spending.items()]
+    disaster_bar_plot = components.generate_cost_bar_plots(disaster_cost_distribution, disaster_map)
+    fema_bar_plot = components.generate_cost_bar_plots(fema_cost_distribution, fema_disaster_map)
+    return disaster_bar_plot, fema_bar_plot
 
 def create_fema_disaster_graph(df_disasters, year):
     df = us_layout.compare_fema_actions_to_disaster_costs(df_disasters, year)
