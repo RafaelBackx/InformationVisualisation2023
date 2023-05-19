@@ -160,6 +160,12 @@
     padding-bottom: 0 !important;
 }
 
+.map-info {
+    background-color: white;
+    border-radius: 5px;
+    padding: 6px 8px;
+}
+
 ::-webkit-scrollbar {
     width: 12px;
 }

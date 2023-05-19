@@ -273,5 +273,9 @@ def update_usa_states_aggregated_data_on_click(state_info):
     cost_distributions = callbacks.create_cost_distributions_for_state(state_name)
     return cost_distributions
 
+@app.callback(Output("info", "children"), [Input("usa-states", "hover_feature")])
+def info_hover(feature):
+    return us_layout.get_info(feature)
+
 if __name__ == "__main__":
     app.run_server(debug=True)

@@ -227,6 +227,19 @@ style = dict(weight=2, opacity=1, color='black', dashArray='', fillOpacity=0.7)
 ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
 colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
 
+def get_info(feature=None):
+    header = [html.H4("% of money spent on mitigation in comparison with entire U.S.")]
+    if not feature:
+        return header + [html.P("Hover over a state")]
+    else:
+        state_name = feature["properties"]["NAME_1"]
+        total_spent = get_total_spent()
+        state_spent = get_state_spending(state_name)["total"]
+    return header + [html.B(state_name), html.Br(),
+                     "{:.3f}%".format((state_spent / total_spent) * 100)]
+
+state_info = html.Div(children=get_info(), id="info", className="map-info", style={"position": "absolute", "top": "10px", "right": "10px", "z-index": "1000"})
+
 map = dl.Map(
     maxBounds=[[-90, -180], [90, 180]],
     maxBoundsViscosity=1.0,
@@ -246,7 +259,8 @@ map = dl.Map(
             options=dict(style = ns('draw_polygon')),
             zoomToBounds=True,
             hoverStyle=arrow_function(dict(weight=2, color='#666', dashArray=''))),  # Gray border on hover (line_thickness, color, line_style)
-        colorbar
+        colorbar,
+        state_info
     ],
     style={"width": "100%", "height": "100%", "display": "block"},
     id="usa-map")
