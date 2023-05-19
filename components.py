@@ -27,7 +27,7 @@ DISASTER_SUBGROUPS = [
     "Meteorological"
 ]
 
-def generate_cost_bar_plots(data,colour_map=None,log=False,title=""):
+def generate_cost_bar_plots(data,colour_map=None,log=False):
     data = {key:value for key,value in data.items() if value > 0}
 
     labels = list(data.keys())
@@ -41,11 +41,7 @@ def generate_cost_bar_plots(data,colour_map=None,log=False,title=""):
     figure=go.Figure()
     figure.add_trace(go.Bar(x=labels, y=values,
                     marker=dict(color = list(map(get_colour, list(colour_map.keys()))))))
-    figure.update_layout(
-        title=title,
-        # yaxis=dict(type='log')
-        )
-    return dcc.Graph(figure=figure)
+    return dcc.Graph(figure=figure, style={"height": "80%"})
 
 def generate_aggregated_data_table(df):
     # Fill missing values with 0s

@@ -271,9 +271,9 @@ def update_aggregated_data_on_state_click(clicked_state,  hideout):
     current_state = state_name
     return hideout
 
-@app.callback(Output('us-aggregated-data', 'children', allow_duplicate=True),Input('usa-states', 'n_clicks'), State('usa-states','click_feature'),prevent_initial_call='initial_duplicate')
-def update_usa_states_aggregated_data_on_click(n_clicks,state_info):
-    global current_state
+@app.callback(Output('us-aggregated-data', 'children', allow_duplicate=True),Input("usa-states", "click_feature"), State('usa-states','click_feature'),prevent_initial_call='initial_duplicate')
+def update_usa_states_aggregated_data_on_click(x,state_info):
+    # global current_state
     if (state_info):
         state_name = state_info['properties']['NAME_1']
     else:
@@ -282,17 +282,9 @@ def update_usa_states_aggregated_data_on_click(n_clicks,state_info):
     cost_distributions = callbacks.create_cost_distributions_for_state(state_name)
     return cost_distributions
 
-@app.callback(Output('fema-disaster-graphs', 'children'), 
-              Input('usa-slider', 'value'), 
-              prevent_initial_call=True)
-def create_fema_disaster_graph(slider_value):
-    return callbacks.create_fema_disaster_graph(disaster_data, slider_value)
-
-@app.callback(Output('fema-cost-distribution-tabs', 'children'), 
-              Input('usa-slider', 'value'), 
-              prevent_initial_call=True)
-def create_fema_cost_distributions(slider_value):
-    return callbacks.create_fema_cost_distribution(slider_value, ['structureType', 'foundationType'])
+@app.callback(Output("info", "children"), [Input("usa-states", "hover_feature")])
+def info_hover(feature):
+    return us_layout.get_info(feature)
 
 if __name__ == "__main__":
     app.run_server(debug=True)

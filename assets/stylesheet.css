@@ -141,6 +141,31 @@
     max-height: 100% ;
 }
 
+#us_layout {
+    padding: 12px;
+}
+
+.us-map-row {
+    width: 100%;
+
+}
+
+.us-graphs-row {
+    height: fit-content !important;
+    padding-bottom: 6px;
+}
+
+.us-map-column {
+    padding-right: 0;
+    padding-bottom: 0 !important;
+}
+
+.map-info {
+    background-color: white;
+    border-radius: 5px;
+    padding: 6px 8px;
+}
+
 ::-webkit-scrollbar {
     width: 12px;
 }
