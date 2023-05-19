@@ -66,15 +66,19 @@ def generate_aggregated_data_table(df):
         "No Injured": "Injured",
         "No Affected": "Affected",
         "No Homeless": "Homeless",
-        "Total Damages ('000 US$)": "Damages ($)",
-        "Reconstruction Costs ('000 US$)": "Reconstruction Costs ($)",
-        "Insured Damages ('000 US$)": "Insured ($)"
+        "Total Damages ('000 US$)": "Damages ('000 US$)",
+        "Reconstruction Costs ('000 US$)": "Reconstruction Costs ('000 US$)",
+        "Insured Damages ('000 US$)": "Insured ('000 US$)"
     }
 
     # Construct table
     table_rows = []
     for column in column_mapping:
-        table_rows.append(html.Tr([html.Td(column_mapping[column]), html.Td(yearly_data[column].values[0])]))
+        if column in ["Total Deaths", "No Injured", "No Affected", "No Homeless"]:
+            table_rows.append(html.Tr([html.Td(column_mapping[column]), html.Td(util.format_large_number(yearly_data[column].values[0], False))]))
+        else:
+            table_rows.append(html.Tr([html.Td(column_mapping[column]), html.Td(util.format_large_number(yearly_data[column].values[0]))]))
+
     return dbc.Table(html.Tbody(table_rows), bordered=True)
 
 
@@ -130,15 +134,16 @@ def generate_affected_graph(df, current_year, current_toggle):
         tickformat="d"), margin=dict(l=0, r=0, t=0, b=0))
     return fig
 
-def generate_gdp_graph(gdp_data, data, current_year, country_code = None, categories = False):
-    years = list(range(1960, current_year+1))
-    country_gdp_data = util.get_gdp_data(
-        gdp_data, data[data["Start Year"] <= current_year], years, country_code, categories)
+def generate_gdp_graph(gdp_data, current_year, categories = False):
+    gdp_data = gdp_data[gdp_data["Start Year"] <= current_year]
     
     if categories:
-        gdp_fig = px.line(country_gdp_data, 'Start Year', 'share', color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
+        gdp_data = gdp_data.groupby(["Start Year", "Disaster Subgroup"], as_index=False).sum(numeric_only=True)
+        gdp_fig = px.line(gdp_data, 'Start Year', 'share', color="Disaster Subgroup", color_discrete_map=EVENT_COLOURS)
     else:
-        gdp_fig = px.line(country_gdp_data, 'Start Year', 'share')
+        gdp_data = gdp_data.groupby("Start Year", as_index=False).sum()
+        gdp_fig = px.line(gdp_data, 'Start Year', 'share')
+
     gdp_fig.update_traces(mode="markers+lines", hovertemplate=None)
     gdp_fig.update_layout(hovermode="x unified", xaxis_title="Year", xaxis=dict(
         tickformat="d"), margin=dict(l=0, r=0, t=0, b=0))
@@ -164,22 +169,107 @@ def create_event_accordion_item(event):
     else:
         location = "Unknown"
 
+    if (not pd.isnull(event["Dis Mag Value"])) and (not pd.isnull(event["Dis Mag Scale"])):
+        impact = f"{event['Dis Mag Value']} {event['Dis Mag Scale']}"
+    else:
+        impact = "Unknown"
+
+    if not pd.isnull(event["Local Time"]):
+        local_time = event['Local Time']
+    else:
+        local_time = "Unknown"
+
+    if not pd.isnull(event["Total Deaths"]):
+        deaths = util.format_large_number(event["Total Deaths"], False)
+    else:
+        deaths = "Unknown"
+
+    if not pd.isnull(event["No Injured"]):
+        injured = util.format_large_number(event["No Injured"], False)
+    else:
+        injured = "Unknown"
+
+    if not pd.isnull(event["No Affected"]):
+        affected =  util.format_large_number(event["No Affected"], False)
+    else:
+        affected = "Unknown"
+
+    if not pd.isnull(event["No Homeless"]):
+        homeless =  util.format_large_number(event["No Homeless"], False)
+    else:
+        homeless = "Unknown"
+
+    if not pd.isnull(event["Reconstruction Costs ('000 US$)"]):
+        reconstruction =  util.format_large_number(event["Reconstruction Costs ('000 US$)"])
+    else:
+        reconstruction = "Unknown"
+
+    if not pd.isnull(event["Insured Damages ('000 US$)"]):
+        insured =  util.format_large_number(event["Insured Damages ('000 US$)"])
+    else:
+        insured = "Unknown"
+
+    if not pd.isnull(event["Total Damages ('000 US$)"]):
+        damages =  util.format_large_number(event["Total Damages ('000 US$)"])
+    else:
+        damages = "Unknown"
+
+    if not pd.isnull(event['Region']):
+        region = event['Region']
+    else:
+        region = "Unknown"
+    
+    if not pd.isnull(event["River Basin"]):
+        river_basin = event["River Basin"]
+    else:
+        river_basin = None
+
     # Format disaster classification
     if (not pd.isnull(event["Disaster Subsubtype"])):
         classification = f"{event['Disaster Subgroup']}/{event['Disaster Type']}/{event['Disaster Subsubtype']}"
     else:
         classification = f"{event['Disaster Subgroup']}/{event['Disaster Type']}"
 
-    # Create accordion for event
-    accordion = dbc.AccordionItem(
-        title=title,
-        children=[
-            html.P([html.B("Event classification: "), classification]),
-            html.P([html.B("Event date: "), util.get_date(event)]),
-            html.P([html.B("Region: "), f"{event['Region']}"]),
-            html.P([html.B("Lat, Long: "), location]),
-        ]
-    )
+    if river_basin:
+        # Create accordion for event
+        accordion = dbc.AccordionItem(
+            title=title,
+            children=[
+                html.P([html.B("Event classification: "), classification]),
+                html.P([html.B("Event date: "), util.get_date(event)]),
+                html.P([html.B("Local time: "), local_time]),
+                html.P([html.B("Region: "), region]),
+                html.P([html.B("River origin: "), river_basin]),
+                html.P([html.B("Lat, Long: "), location]),
+                html.P([html.B("Impact: "), impact]),
+                html.P([html.B("No. affected: "), affected]),
+                html.P([html.B("Total deaths: "), deaths]),
+                html.P([html.B("No. injured: "), injured]),
+                html.P([html.B("No. homeless: "), homeless]),
+                html.P([html.B("Total damages ('000 US$): "), damages]),
+                html.P([html.B("Reconstruction costs ('000 US$): "), reconstruction]),
+                html.P([html.B("Insured damages ('000 US$): "), insured]),
+            ]
+        )
+    else:
+        accordion = dbc.AccordionItem(
+            title=title,
+            children=[
+                html.P([html.B("Event classification: "), classification]),
+                html.P([html.B("Event date: "), util.get_date(event)]),
+                html.P([html.B("Local time: "), local_time]),
+                html.P([html.B("Region: "), region]),
+                html.P([html.B("Lat, Long: "), location]),
+                html.P([html.B("Impact: "), impact]),
+                html.P([html.B("No. affected: "), affected]),
+                html.P([html.B("Total deaths: "), deaths]),
+                html.P([html.B("No. injured: "), injured]),
+                html.P([html.B("No. homeless: "), homeless]),
+                html.P([html.B("Total damages ('000 US$): "), damages]),
+                html.P([html.B("Reconstruction costs ('000 US$): "), reconstruction]),
+                html.P([html.B("Insured damages ('000 US$): "), insured]),
+            ]
+        )
 
     return accordion
 
@@ -208,7 +298,7 @@ def generate_country_popup(disaster_data, country, current_year):
     geophysical_icon = html.Img(
         src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAC+klEQVR4nO2YS2gTURRAnz9EFxYUhWrIvTNE3biR+lsU60YpiNRNaOfdiQuRrtyJ61YQFHXlUtwoVcRFwYWflaWWdu4bY8EPqF2JgqAIivhF28jLTEzSX5IyyczAHHiQzJvFPXPf574nREJCQkLCPBSEWCbiDlP6sGNBn4gz+f6OVSzhlSKYGukSK0VcURJOKcKCbkxwXMSRcdvcxBI/l0QUwZup7sxqETeY4IqXCbynCJ4Wf9vGSREn3D7YqQj/MsFvl3A723C0KCLxfb6/fa2IC0ww6g+ni6VnSgL7GTot4oBjQV9RQsKHfNZsKz1nwkN+Vj4xZdaJKDORTa3Rk9rLhnFidr+SOOLLDIgoowgG/eEzeTsrVszudyyz01+Kv6jc5g0iijBlUizxmzescP/C78EDX+a8iCJMcMuXuLnoezLdwYQzivDHxLHUFhElHMvs1MGxxO/5nJmu9T5LHPbmClwWUaEwIJYriU/85Xawsk/v5IrgupJwprICdm1zB0ucZgm/6hFvCXp1KtdTOFQqQyayqfXl/aS6T090Jnjr910VYZPPmm16vyjXU8X94xET7GMJr6ueexkbm9sHfxzL3NqyoB2CA7oQrHzGhJfmBtt4Y8IbLZHQZwn9FVnC85KMyhnbdC0ViIjEaT1vmi7CEvsrvt7LPKXbFeHdICQqZIabX3ZIeDdrHlT/D2Z4zaicuatpIrpaDTroRbJyv2mrkq5WWyWiCAuuhV2Bi7DEs62UUMUGY4FKTGYzG5WEr60XwYJjGwcDE9F1UBgSyqvB3FJJ49i417WMI0uScHoBdR0UlojyJn6PLmmY8IXew/QdWcMiSsK1MCWUN1eeKQkX/os1egOjd1h9AxK+CFZniOBj5R1APdm4E3bQauHhdq4uiceWscc/vRUi2ST+HJcItbNB+DD0YKnWEMOhxSVs6A47SFWfyIxLxu55JfSaXT6uRr8xwei8Iq7E3rCDU43KSOypktAXafqMET8RWNommZCQkJCQIKr5B4e3yC7b0qbRAAAAAElFTkSuQmCC", style={"width": "auto", "height": "24px"})
     meteorological_icon = html.Img(
-        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAxElEQVR4nO3UPWpCQRiF4cdGXYN2rsBNWIkuJKhlNiCmyZrEMj9NIuIybDSCNk4YuQS5GOWqQwh44FQD75k538dw139QDSO8Y4E1ZnhG41r4A7YIvziePV4KfzoBzju+ppBa2BUIiO6eg5bRxys2BeEBc5RODXJ6ATTk3DwGr+LzBvCAFSboHAYMbgQPOcfV3ustUUBAOwZ8JQwYy3pLFbBMXdFStvtJK6rgI+WQo+oJQoaOfBU9vFwx+FVWy8/N7/p7fQOe/B+BqqKyIgAAAABJRU5ErkJggg==", style={"width": "auto", "height": "24px"})
+        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABAElEQVR4nO2UP04CURjE1wY9g3ScwEtQGT2IAUovYKCx4gRLdma3mI+aDlr/NEDwGjagiTSuea5AwopxgZdQMMkr32++efPyBcFRB68kSc5FNkU+G/Aq8l3kRMB9N44rO8EF3BgwNzL99QBzkbdbwQ1obQSvHZem2ORRVBXw+V+DH5Prv6FSSUBd5KOAjyJwywxe0jQ92VwkMC4KtXUT8iIHD8PwTORoV7hlpc8EDLpxfLUqk2zsBc5cmubitzz5MLCsl0uX4M2XgZF9l2DmLQE59ftE5NStg7rXJ+q126cGDL2V7KROp7x3E+AuyK2KKKqJfNi6eHzf6y8nP+og9AWJ3IBVtXZyhgAAAABJRU5ErkJggg==", style={"width": "auto", "height": "24px"})
     hydrological_icon = html.Img(
         src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABTElEQVR4nM2VO0sDQRDHrxAfxJ07bAQ7sbLwUfsZ7PxI+QA+GjEfwSZF4swqQtTCLt1hIciZmUNr0WChl8idFxIQ3UcScOAPVyy/3+7scBsE/6lCLXt5pgJXOt0BlPc8+fdE4ZXLh2UgSYGkX+Z54aKzMhl6qz8DJNcj8O8g3wan8ezYfEA+/AEfSg7Ggiud7v4KL5Ov8YKH9SRSxGISAMoTaF5y3z1xzQgfnIK45gRfbCbrgPxhKwDiz8oZb1gLALlhD5fBhTes4OH54yoQZx6CHmBnzShQKFVnOJV3gVK1EHDbX8Bts4C46y0g7tqc4NVfIC9GARDf+QoAJbZokRx5C4j3jYKwmW57jSlxFqFsGgWuvwkYTtBxYF2tZB5QbhwEVwHez9kLSokiPvm7XZwVO3eGj1SkZat4dFBihfxWjDFKnD821j2fZn0BzxejKOBMlnUAAAAASUVORK5CYII=", style={"width": "auto", "height": "24px"})
     climatological_icon = html.Img(
@@ -442,7 +532,8 @@ def generate_country_popup(disaster_data, country, current_year):
         ],
         id=f"{country_iso}-modal",
         fullscreen=True,
-        is_open=True)
+        is_open=True,
+        scrollable=True)
     return popup
 
 

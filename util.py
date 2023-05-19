@@ -143,3 +143,9 @@ def fill_missing_columns_with_default(df, columns, columns_to_fill, values):
         print(col)
         merged_df[col] = merged_df[col].fillna(values[idx])
     return merged_df
+
+def format_large_number(number, float = True):
+    if float:
+        return f"{number:,}"
+    else:
+        return f"{number:,.0f}"

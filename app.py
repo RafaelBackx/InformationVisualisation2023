@@ -38,21 +38,20 @@ DISASTER_SUBGROUPS = [
 ns = Namespace("dashExtensions", "default")
 
 disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
-gdp_data = pd.read_csv('./Data/gdp_data_constant.csv')
+gdp_data = pd.read_csv('./Data/gdp_data.csv')
 
-fig = px.scatter(
-    data_frame=disaster_data,
-    x='Longitude',
-    y='Latitude',
-    color='Disaster Type',
-    hover_data=['Country', 'Disaster Type']
-)
+# fig = px.scatter(
+#     data_frame=disaster_data,
+#     x='Longitude',
+#     y='Latitude',
+#     color='Disaster Type',
+#     hover_data=['Country', 'Disaster Type']
+# )
 
-fig.update_layout(
-    title_text='Natural Disasters by Location',
-    margin=dict(l=0, r=0, t=30, b=0)
-)
-
+# fig.update_layout(
+#     title_text='Natural Disasters by Location',
+#     margin=dict(l=0, r=0, t=30, b=0)
+# )
 
 server = Flask("Natural Disasters Dashboard")
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
@@ -80,16 +79,12 @@ tabs = dbc.Tabs(
 
 geojson = dl.GeoJSON(data=util.get_world_geojson())
 
-
-
 app.layout = html.Div(
     children=[
         tabs,
         html.Div(id="content"),
         html.Div(id="popup"),
-        dcc.Graph(figure=fig)  # Add the scatter plot as a dcc.Graph component
-    
-        
+        # dcc.Graph(figure=fig)  # Add the scatter plot as a dcc.Graph component
     ]
 )
 
@@ -160,7 +155,7 @@ def worldwide_slider_change(current_year, affected_filter, gdp_filter):
               State('world-year-slider', 'value'),
               prevent_initial_call=True)
 def worldwide_gdp_switch(active_tab, current_year):
-    return callbacks.changed_gdp_filter(gdp_data, disaster_data, current_year, None, active_tab != 'general')
+    return callbacks.changed_gdp_filter(gdp_data, current_year, None, active_tab != 'general')
 
 # Callback to handle switching preferences for the affected graph on the mmain page
 @app.callback(Output('world-affected-graph', 'figure', allow_duplicate=True),
@@ -232,7 +227,7 @@ def country_slider_change(current_year, affected_filter, gdp_filter, country):
               prevent_initial_call=True)
 def country_gdp_switch(active_tab, current_year, country):
     country_code = country["properties"]["ISO_A3"]
-    return callbacks.changed_gdp_filter(gdp_data, disaster_data, current_year, country_code, active_tab != 'general')
+    return callbacks.changed_gdp_filter(gdp_data, current_year, country_code, active_tab != 'general')
 
 # Callback to handle switching preferences for the affected graph on the popup
 @app.callback(Output('country-affected-graph', 'figure', allow_duplicate=True),
