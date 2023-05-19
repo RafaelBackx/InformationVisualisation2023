@@ -28,24 +28,6 @@ def create_cost_distributions_for_state(state):
     ], style={'display': 'flex', 'flex-direction': 'row', 'maxHeight': '25vh'})
     return div
 
-def update_map_on_slider_increment(slider_value,  data):
-    features = data['features']
-    state_iso_original = [feature['properties']['ISO_1'] for feature in features]
-    state_iso = [name.split('-')[1] for name in state_iso_original]
-    state_names = [state_converter.abbrev_to_us_state[abbrev] for abbrev in state_iso]
-
-    colour_map = {}
-
-    for idx,state_name in enumerate(state_names):
-        id = state_iso_original[idx]
-        state_spending = us_layout.get_state_spending(state_name,slider_value)
-        total_spent_state = state_spending['total']
-        total_spent_us = us_layout.get_total_spent(slider_value)
-        total_spent_us = max(total_spent_us, 1)
-        colour = util.ratio_to_gradient(total_spent_state/total_spent_us)
-        colour_map[id] = colour
-    return colour_map
-
 def update_aggregated_data_on_slider_increment(slider_value, state = None):
     spending = us_layout.get_state_spending(state,year=slider_value)
     spending = dict(sorted(spending.items(),key= lambda x:x[1], reverse=True))
