@@ -9,6 +9,7 @@ from dash_iconify import DashIconify
 from flask import Flask
 import plotly.express as px
 import dash_leaflet.express as dlx
+import json
 
 import util
 import components
@@ -42,6 +43,8 @@ gdp_data = pd.read_csv('./Data/gdp_data.csv')
 df_properties = pd.read_json('./Data/preprocessed-fema-properties.json')
 df_projects = pd.read_json('./Data/preprocessed-fema-projects.json')
 
+
+
 # fig = px.scatter(
 #     data_frame=disaster_data,
 #     x='Longitude',
@@ -56,8 +59,11 @@ df_projects = pd.read_json('./Data/preprocessed-fema-projects.json')
 # )
 
 server = Flask("Natural Disasters Dashboard")
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True, prevent_initial_callbacks='initial_duplicate')
 server=app.server
+
+
+
 
 ################
 #              #
@@ -85,7 +91,7 @@ app.layout = html.Div(
     children=[
         tabs,
         html.Div(id="content"),
-        html.Div(id="popup"),
+        html.Div(id="popup")
         # dcc.Graph(figure=fig)  # Add the scatter plot as a dcc.Graph component
     ]
 )
@@ -278,6 +284,11 @@ def update_usa_states_aggregated_data_on_click(state_info):
 @app.callback(Output("info", "children"), [Input("usa-states", "hover_feature")])
 def info_hover(feature):
     return callbacks.state_hover(feature, df_properties)
+
+@app.callback(Output("info_countries", "children", allow_duplicate=True), [Input("countries", "hover_feature")])
+def info_map(feature):
+    return callbacks.country_hover(feature, gdp_data)
+
 
 if __name__ == "__main__":
     app.run_server(debug=True)

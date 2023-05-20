@@ -8,6 +8,8 @@ from dash_iconify import DashIconify
 from dash import html, dcc
 from dash_extensions.javascript import arrow_function, Namespace
 
+import json
+
 import util
 
 ns = Namespace("dashExtensions", "default")
@@ -549,3 +551,24 @@ def generate_state_info(df, feature = None):
         state_spent = util.get_state_spending(state_name, df)["total"]
     return header + [html.B(state_name), html.Br(),
                      "{:.3f}%".format((state_spent / total_spent) * 100)]
+
+
+def generate_country_info(df, feature=None):
+    header = [html.H4("Share value GDP of countries")]
+    if not feature:
+        return header + [html.P("Hover over a country")]
+    else:
+        df = df.groupby('ISO').sum(numeric_only=True)
+        country_name = feature['properties']['ISO_A3']
+        value = df.loc[country_name, "share"]
+        return header + [html.B(country_name), html.Br(), format(value)]
+
+        
+                
+
+
+        
+        
+        
+    
+
