@@ -270,12 +270,19 @@ def country_show_events(n_clicks, io, current_year, country):
               State('usa-states', 'hideout'), prevent_initial_call=True)
 def update_aggregated_data_on_state_click(clicked_state,  hideout):
     global current_state
-    state_name = clicked_state['properties']['ISO_1']
-    hideout['active_state'] = state_name
-    current_state = state_name
+    if (clicked_state):
+        state_name = clicked_state['properties']['ISO_1']
+        hideout['active_state'] = state_name
+        current_state = state_name
     return hideout
 
-@app.callback([Output('us-cost-distribution-subgroups', 'children', allow_duplicate=True), Output('us-cost-distribution-mitigations', 'children'), Output('usa-states', 'click_feature'), Output('usa-states', 'hideout', allow_duplicate=True)], Input('usa-states','n_clicks'), State('usa-states', 'click_feature'), State('usa-states', 'hideout'),prevent_initial_call='initial_duplicate')
+@app.callback([Output('us-cost-distribution-subgroups', 'children', allow_duplicate=True),
+               Output('us-cost-distribution-mitigations', 'children'), 
+               Output('usa-states', 'click_feature'), 
+               Output('usa-states', 'hideout', allow_duplicate=True)], 
+               Input('usa-states', 'n_clicks'), 
+               State('usa-states', 'click_feature'), 
+               State('usa-states', 'hideout'),prevent_initial_call='initial_duplicate')
 def update_usa_states_aggregated_data_on_click(_n_clicks,state_info,hideout):
     global current_state
     current_feature = state_info
@@ -299,7 +306,6 @@ def info_hover(feature):
 @app.callback(Output("info_countries", "children", allow_duplicate=True), [Input("countries", "hover_feature")], State('world-year-slider', 'value'))
 def info_map(feature, current_year):
     return callbacks.country_hover(feature, current_year, gdp_data)
-
 
 if __name__ == "__main__":
     app.run_server(debug=True)
