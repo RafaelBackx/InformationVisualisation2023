@@ -227,7 +227,7 @@ style = dict(weight=2, opacity=1, color='black', dashArray='', fillOpacity=0.7)
 ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
 colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
 
-state_info = html.Div(id="info", className="map-info", style={"position": "absolute", "top": "10px", "right": "10px", "z-index": "1000"})
+state_info = html.Div(id="info", className="map-info", style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
 
 map = dl.Map(
     maxBounds=[[-90, -180], [90, 180]],

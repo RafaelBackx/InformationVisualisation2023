@@ -73,7 +73,7 @@ style = dict(weight=2, opacity=1, color='black', dashArray='', fillOpacity=0.7)
 ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
 colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomright")
 
-country_info = html.Div(id="info_countries", className="map-info", style={"position": "absolute", "top": "10px", "left": "10px", "z-index": "1000"})
+country_info = html.Div(id="info_countries", className="map-info", style={"position": "absolute", "top": "10px", "left": "10px", "zIndex": "1000"})
 
 world_slider = dcc.Slider(min=1960,
                           max=2023,
@@ -159,6 +159,7 @@ map = dl.Map(
     maxBoundsViscosity=1.0,
     maxZoom=18,
     minZoom=2,
+    zoom=2,
     center=(40, -37),
     bounceAtZoomLimits=True,
     children=[
@@ -169,7 +170,6 @@ map = dl.Map(
             id="countries",
             # Invisible polygons,
             options=dict(style = ns('draw_countries')),
-            zoomToBounds=True,
             hideout=dict(colorscale=colorscale,classes=classes,style=style,current_year=1960,ratio_map=util.generate_countries_colours()),
             hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))),  # Gray border on hover (line_thickness, color, line_style)
         colorbar,
