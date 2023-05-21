@@ -298,7 +298,7 @@ us_layout = html.Div(id='us_layout', children=[
                     )
                 ],
                 width=6,
-                className="column us-map-column gdp-column"
+                className="column us-map-column gdp-column mit-map"
             ),
             dbc.Col(children=[
                     dbc.Card(
