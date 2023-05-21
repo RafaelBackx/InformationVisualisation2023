@@ -239,7 +239,7 @@ mitigation_graph = dcc.Graph(id='mitigation-graph', figure=compare_mitigation_an
 usa_states_data = util.get_country_data('USA')
 
 classes = [0,5,10,15,20,25]
-colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026']
+colorscale = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026']
 style = dict(weight=2, opacity=1, color='black', dashArray='', fillOpacity=0.7)
 ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
 colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
@@ -312,7 +312,7 @@ us_layout = html.Div(id='us_layout', children=[
                     )
                 ],
                 width=6,
-                className="column map-column us-map-column"
+                className="column us-map-column gdp-column"
             ),
             dbc.Col(children=[
                     dbc.Card(
@@ -324,10 +324,10 @@ us_layout = html.Div(id='us_layout', children=[
                     )
                 ],
                 width=6,
-                className="column map-column us-map-column"
+                className="column us-map-column affected-column"
             ),
         ],
-        className="map-row us-map-row"
+        className="map-row us-map-row",
     ),
     dbc.Row(
         children=[
@@ -335,7 +335,7 @@ us_layout = html.Div(id='us_layout', children=[
                 children=[
                     dbc.Card(
                         children=[
-                            dbc.CardHeader("Disaster cost distribution over subgroups"),
+                            dbc.CardHeader("Disaster cost distribution over subgroups U.S.", id="us-cost-distribution-subgroups-header"),
                             dbc.CardBody(children=[html.Div(id="us-cost-distribution-subgroups")])
                         ]
                     )
@@ -347,7 +347,7 @@ us_layout = html.Div(id='us_layout', children=[
                 children=[
                     dbc.Card(
                         children=[
-                            dbc.CardHeader("Disaster cost distribution over mitigations"),
+                            dbc.CardHeader("Disaster cost distribution over mitigations U.S.", id="us-cost-distribution-mitigations-header"),
                             dbc.CardBody(children=[html.Div(id="us-cost-distribution-mitigations")])
                         ]
                     )

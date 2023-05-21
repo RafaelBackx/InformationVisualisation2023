@@ -26,49 +26,8 @@ climatological_icon = html.Img(
 show_events_button = dbc.Button(
     "Show all events", color="primary", className="me-1 show-events", id="world-show-events")
 
-
-# # Aggregating by Country
-# df = gdp_disaster_data.groupby('ISO').sum()
-# df = gdp_disaster_data.reset_index(drop=False)
-# DATA_PATH='MVP-Rafael/countries.json'
-# with open(DATA_PATH, "r") as file:
-#     geo_world = json.load(file)
-
-
-# # Instanciating necessary lists
-# found = []
-# missing = []
-# countries_geo = []
-# # For simpler acces, setting "zone" as index in a temporary dataFrame
-# tmp = df.set_index('ISO')
-
-
-# # Looping over the custom GeoJSON file
-# for country in geo_world['features']:
-#     country_name = country['properties']['ISO_A3']
-#     if country_name in tmp.index:
-#         found.append(country_name)
-#         geometry = country['geometry']
-#         country_geo = {
-#             'type': 'Feature',
-#             'geometry': geometry,
-#             'properties': {
-#                 'country_name': country_name,
-#                 'share_value': tmp.loc[country_name, 'share']
-#                 # Adjust the column name above to match the relevant column in your DataFrame
-#             }
-#         }
-#         countries_geo.append(country_geo)
-#     else:
-#         missing.append(country_name)
-
-# # Displaying metrics
-# print(f'Countries found    : {len(found)}')
-# print(f'Countries not found: {len(missing)}')
-# geo_world_ok = {'type': 'FeatureCollection', 'features': countries_geo}
-
-classes = [0,5,10,15,20,25]
-colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026']
+classes = [0, 0.5, 1, 5, 10, 50, 100]
+colorscale = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
 style = dict(weight=2, opacity=1, color='black', dashArray='', fillOpacity=0.7)
 ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
 colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomright")
@@ -166,17 +125,19 @@ map = dl.Map(
         dl.TileLayer(),
         # https://datahub.io/core/geo-countries#resource-countries
         dl.GeoJSON(
-            data=util.get_world_geojson(),
-            id="countries",
-            # Invisible polygons,
-            options=dict(style = ns('draw_countries')),
-            hideout=dict(colorscale=colorscale,classes=classes,style=style,current_year=1960,ratio_map=util.generate_countries_colours()),
-            hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))),  # Gray border on hover (line_thickness, color, line_style)
+                    data=util.get_world_geojson(),
+                    id="countries",
+                    # Invisible polygons,
+                    options=dict(style = ns('draw_countries')),
+                    hideout=dict(colorscale=colorscale,classes=classes,style=style,current_year=1960,ratio_map=util.generate_countries_colours()),
+                    hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))),
         colorbar,
         country_info,
-        dl.GeoJSON(data={},
+        dl.LayersControl(
+                [dl.Overlay(dl.GeoJSON(data={},
                    id="events",
-                   options=dict(pointToLayer=ns("draw_marker"))),
+                   options=dict(pointToLayer=ns("draw_marker"))), name="Events", checked=True)]
+        ),
         dl.GestureHandling(),
         map_legend,
         world_slider_wrapper
