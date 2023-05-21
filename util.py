@@ -9,6 +9,20 @@ from converter import abbrev_to_us_state, us_state_to_abbrev
 import matplotlib as mpl
 
 geolocator = Nominatim(user_agent='geoapiExercises')
+gdp_disaster_data = pd.read_csv("Data/gdp_data.csv")
+
+def generate_countries_colours():
+    years = list(range(1960,2023))
+    colour_map = {}
+    for year in years:
+        df = gdp_disaster_data[gdp_disaster_data['Start Year'] == year].groupby('ISO').sum(numeric_only=True)
+        country_names = df.index
+        colour_countries = {}
+        for country_name in country_names:
+            value = df.loc[country_name, "share"]
+            colour_countries[country_name] = value
+        colour_map[year] = colour_countries        
+    return colour_map
 
 def filter_events(df, filters, location_important = False):
     data = df
@@ -139,7 +153,6 @@ def fill_missing_columns_with_default(df, columns, columns_to_fill, values):
     new_df = pd.DataFrame(index=index, columns=['count'])
     merged_df = pd.merge(copy_df, new_df, how='right', left_on=columns, right_index=True)
     for idx,col in enumerate(columns_to_fill):
-        print(col)
         merged_df[col] = merged_df[col].fillna(values[idx])
     return merged_df
 

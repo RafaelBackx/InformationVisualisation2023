@@ -15,7 +15,6 @@ from dash import html
 
 def update_map_on_slider_increment(clicked_state,data):
     colour_map = us_layout.generate_states_colours(data)
-    print({'active_state': clicked_state, 'colour_map': colour_map})
     return {'active_state': clicked_state, 'colour_map': colour_map}
 
 
@@ -79,7 +78,7 @@ def show_events_button_clicked(events, current_year, country_code = None):
     # Return the updated component
     return components.create_events_accordion(events)
 
-def slider_change(events, gdp_data, current_year, affected_filter, gdp_filter, country_code = None):
+def slider_change(events, gdp_data, current_year, affected_filter, gdp_filter, country_code = None,old_hideout = None):
     # If a country code is given filter events using the code
     if country_code:
         events = util.filter_events(events, {'ISO': country_code})
@@ -104,6 +103,11 @@ def slider_change(events, gdp_data, current_year, affected_filter, gdp_filter, c
 
     # Generate the aggregated data component
     aggregated_data = components.generate_aggregated_data_table(yearly_data)
+
+    # update hideout for the world map
+    if (old_hideout != None):
+        old_hideout['current_year'] = current_year
+        return events_geojson, gdp_fig, affected_fig, aggregated_data, old_hideout
 
     return events_geojson, gdp_fig, affected_fig, aggregated_data
 

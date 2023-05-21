@@ -26,69 +26,54 @@ climatological_icon = html.Img(
 show_events_button = dbc.Button(
     "Show all events", color="primary", className="me-1 show-events", id="world-show-events")
 
-gdp_disaster_data = pd.read_csv("Data/gdp_data.csv")
+
+# # Aggregating by Country
+# df = gdp_disaster_data.groupby('ISO').sum()
+# df = gdp_disaster_data.reset_index(drop=False)
+# DATA_PATH='MVP-Rafael/countries.json'
+# with open(DATA_PATH, "r") as file:
+#     geo_world = json.load(file)
 
 
-# Aggregating by Country
-df = gdp_disaster_data.groupby('ISO').sum()
-df = gdp_disaster_data.reset_index(drop=False)
-DATA_PATH='MVP-Rafael/countries.json'
-with open(DATA_PATH, "r") as file:
-    geo_world = json.load(file)
+# # Instanciating necessary lists
+# found = []
+# missing = []
+# countries_geo = []
+# # For simpler acces, setting "zone" as index in a temporary dataFrame
+# tmp = df.set_index('ISO')
 
 
-# Instanciating necessary lists
-found = []
-missing = []
-countries_geo = []
-# For simpler acces, setting "zone" as index in a temporary dataFrame
-tmp = df.set_index('ISO')
+# # Looping over the custom GeoJSON file
+# for country in geo_world['features']:
+#     country_name = country['properties']['ISO_A3']
+#     if country_name in tmp.index:
+#         found.append(country_name)
+#         geometry = country['geometry']
+#         country_geo = {
+#             'type': 'Feature',
+#             'geometry': geometry,
+#             'properties': {
+#                 'country_name': country_name,
+#                 'share_value': tmp.loc[country_name, 'share']
+#                 # Adjust the column name above to match the relevant column in your DataFrame
+#             }
+#         }
+#         countries_geo.append(country_geo)
+#     else:
+#         missing.append(country_name)
 
-
-# Looping over the custom GeoJSON file
-for country in geo_world['features']:
-    country_name = country['properties']['ISO_A3']
-    if country_name in tmp.index:
-        found.append(country_name)
-        geometry = country['geometry']
-        country_geo = {
-            'type': 'Feature',
-            'geometry': geometry,
-            'properties': {
-                'country_name': country_name,
-                'share_value': tmp.loc[country_name, 'share']
-                # Adjust the column name above to match the relevant column in your DataFrame
-            }
-        }
-        countries_geo.append(country_geo)
-    else:
-        missing.append(country_name)
-
-# Displaying metrics
-print(f'Countries found    : {len(found)}')
-print(f'Countries not found: {len(missing)}')
-geo_world_ok = {'type': 'FeatureCollection', 'features': countries_geo}
-
-def generate_countries_colours(df):
-    df = df.groupby('ISO').sum(numeric_only=True)
-    country_names = df.index
-    colour_countries = {}
-    for country_name in country_names:
-        value = df.loc[country_name, "share"]
-        colour_countries[country_name] = value        
-   
-    return colour_countries
-
-
-
+# # Displaying metrics
+# print(f'Countries found    : {len(found)}')
+# print(f'Countries not found: {len(missing)}')
+# geo_world_ok = {'type': 'FeatureCollection', 'features': countries_geo}
 
 classes = [0,5,10,15,20,25]
 colorscale = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026']
 style = dict(weight=2, opacity=1, color='black', dashArray='', fillOpacity=0.7)
 ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
-colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
+colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomright")
 
-country_info = html.Div(id="info_countries", className="map-info", style={"position": "absolute", "top": "10px", "right": "10px", "z-index": "1000"})
+country_info = html.Div(id="info_countries", className="map-info", style={"position": "absolute", "top": "10px", "left": "10px", "z-index": "1000"})
 
 world_slider = dcc.Slider(min=1960,
                           max=2023,
@@ -111,7 +96,7 @@ animation_button = dbc.Button(children=[
     id="world-animation-button")
 
 animation_interval = dcc.Interval(
-    'animation-interval', interval=500, disabled=True)
+    'animation-interval', interval=1000, disabled=True)
 
 world_slider_wrapper = EventListener(
     children=[
@@ -185,14 +170,8 @@ map = dl.Map(
             # Invisible polygons,
             options=dict(style = ns('draw_countries')),
             zoomToBounds=True,
-            hideout=dict(colorscale=colorscale,classes=classes,style=style,ratio_map=generate_countries_colours(gdp_disaster_data)),
+            hideout=dict(colorscale=colorscale,classes=classes,style=style,current_year=1960,ratio_map=util.generate_countries_colours()),
             hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))),  # Gray border on hover (line_thickness, color, line_style)
-        # dl.GeoJSON(
-           #  data=geo_world_ok,
-            # id="gdp-colour",
-           #  hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray='')) 
-            
-          # ),
         colorbar,
         country_info,
         dl.GeoJSON(data={},

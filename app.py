@@ -152,11 +152,13 @@ def update_slider(_n_clicks, current_slider_value, max, min):
               Output('world-gdp-graph', 'figure'),
               Output('world-affected-graph', 'figure'),
               Output("world-aggregated-data", "children"),
+              Output('countries', 'hideout'),
               Input('world-year-slider', 'value'),
               [State("world-affected-tabs", 'active_tab'),
-               State('world-gdp-tabs', 'active_tab')])
-def worldwide_slider_change(current_year, affected_filter, gdp_filter):
-    return callbacks.slider_change(disaster_data, gdp_data, current_year, affected_filter, gdp_filter)
+               State('world-gdp-tabs', 'active_tab'),
+               State('countries', 'hideout')])
+def worldwide_slider_change(current_year, affected_filter, gdp_filter, old_hideout):
+    return callbacks.slider_change(disaster_data, gdp_data, current_year, affected_filter, gdp_filter, old_hideout=old_hideout)
 
 # Callback to handle switching preferences for the gdp graph on the main page
 @app.callback(Output('world-gdp-graph', 'figure', allow_duplicate=True),
@@ -226,7 +228,7 @@ def update_country_slider(_n_clicks, current_slider_value, max, min):
                State("countries", "click_feature")])
 def country_slider_change(current_year, affected_filter, gdp_filter, country):
     country_code = country["properties"]["ISO_A3"]
-    return callbacks.slider_change(disaster_data, gdp_data, current_year, affected_filter, gdp_filter, country_code)
+    return callbacks.slider_change(disaster_data, gdp_data, current_year, affected_filter, gdp_filter, country_code=country_code)
 
 # Callback to handle switching preferences for the gdp graph on the popup
 @app.callback(Output('country-gdp-graph', 'figure', allow_duplicate=True),

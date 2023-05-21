@@ -554,7 +554,7 @@ def generate_state_info(df, feature = None):
 
 
 def generate_country_info(df, feature=None):
-    header = [html.H4("Share value GDP of countries")]
+    header = [html.H6("% of GDP in damages", style={'margin':0}), html.Br(), html.H6("because of Natural disasters", style={'margin':0})]
     if not feature:
         return header + [html.P("Hover over a country")]
     else:
