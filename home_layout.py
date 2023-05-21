@@ -115,7 +115,7 @@ map_legend = html.Div(children=[
 
 map = dl.Map(
     id="map",
-    style={'width': '100%', 'height': '100vh', 'margin': "auto", "display": "block"},
+    style={"width": "100%", "height": "100%", "display": "block"},
     maxBounds=[[-90, -180], [90, 180]],
     maxBoundsViscosity=1.0,
     maxZoom=18,
