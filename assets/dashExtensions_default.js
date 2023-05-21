@@ -37,6 +37,9 @@ window.dashExtensions = Object.assign({}, window.dashExtensions, {
             let country = feature['properties']['ISO_A3'];
             const year_data = ratio_map[current_year]
             let value = year_data[country]  // get value the determines the color
+            if (value === undefined) {
+                value = 0
+            }
             for (let i = 0; i < classes.length; ++i) {
                 if (value >= classes[i]) {
                     style.fillColor = colorscale[i];  // set the fill color according to the class
