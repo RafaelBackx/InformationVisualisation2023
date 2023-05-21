@@ -553,14 +553,17 @@ def generate_state_info(df, feature = None):
                      "{:.3f}%".format((state_spent / total_spent) * 100)]
 
 
-def generate_country_info(df, feature=None):
+def generate_country_info(df, current_year, feature=None):
     header = [html.H6("% of GDP in damages", style={'margin':0}), html.Br(), html.H6("because of Natural disasters", style={'margin':0})]
     if not feature:
         return header + [html.P("Hover over a country")]
     else:
-        df = df.groupby('ISO').sum(numeric_only=True)
+        df = df[df['Start Year'] == current_year].groupby('ISO').sum(numeric_only=True)
         country_name = feature['properties']['ISO_A3']
-        value = df.loc[country_name, "share"]
+        if (country_name in df.index):
+            value = df.loc[country_name, "share"]
+        else:
+            value = 0
         return header + [html.B(country_name), html.Br(), format(value)]
 
         

@@ -33,16 +33,16 @@ window.dashExtensions = Object.assign({}, window.dashExtensions, {
             return style;
         },
         draw_countries: function(feature,context){
-            const {classes, colorscale, style, ratio_map} = context.props.hideout;  // get props from hideout
+            const {classes, colorscale, style,current_year, ratio_map} = context.props.hideout;  // get props from hideout
             let country = feature['properties']['ISO_A3'];
-            const value = ratio_map[country]  // get value the determines the color
+            const year_data = ratio_map[current_year]
+            let value = year_data[country]  // get value the determines the color
             for (let i = 0; i < classes.length; ++i) {
-                if (value > classes[i]) {
+                if (value >= classes[i]) {
                     style.fillColor = colorscale[i];  // set the fill color according to the class
                 }
             }
             return style;
-            
             },
             
         }

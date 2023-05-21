@@ -296,9 +296,9 @@ def update_usa_states_aggregated_data_on_click(_n_clicks,state_info,hideout):
 def info_hover(feature):
     return callbacks.state_hover(feature, df_properties)
 
-@app.callback(Output("info_countries", "children", allow_duplicate=True), [Input("countries", "hover_feature")])
-def info_map(feature):
-    return callbacks.country_hover(feature, gdp_data)
+@app.callback(Output("info_countries", "children", allow_duplicate=True), [Input("countries", "hover_feature")], State('world-year-slider', 'value'))
+def info_map(feature, current_year):
+    return callbacks.country_hover(feature, current_year, gdp_data)
 
 
 if __name__ == "__main__":
