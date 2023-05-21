@@ -279,7 +279,7 @@ us_layout = html.Div(id='us_layout', children=[
                 children=[
                     dbc.Card(
                         children=[
-                            dbc.CardHeader("Disaster cost distribution over subgroups"),
+                            dbc.CardHeader("Disaster cost distribution over subgroups U.S.", id="us-cost-distribution-subgroups-header"),
                             dbc.CardBody(children=[html.Div(id="us-cost-distribution-subgroups")])
                         ]
                     )
@@ -291,7 +291,7 @@ us_layout = html.Div(id='us_layout', children=[
                 children=[
                     dbc.Card(
                         children=[
-                            dbc.CardHeader("Disaster cost distribution over mitigations"),
+                            dbc.CardHeader("Disaster cost distribution over mitigations U.S.", id="us-cost-distribution-mitigations-header"),
                             dbc.CardBody(children=[html.Div(id="us-cost-distribution-mitigations")])
                         ]
                     )

@@ -274,7 +274,9 @@ def update_aggregated_data_on_state_click(clicked_state,  hideout):
     return hideout
 
 @app.callback([Output('us-cost-distribution-subgroups', 'children', allow_duplicate=True),
+               Output('us-cost-distribution-subgroups-header', 'children'),
                Output('us-cost-distribution-mitigations', 'children'), 
+               Output('us-cost-distribution-mitigations-header', 'children'), 
                Output('usa-states', 'click_feature'), 
                Output('usa-states', 'hideout', allow_duplicate=True)], 
                Input('usa-states', 'n_clicks'), 
@@ -293,8 +295,8 @@ def update_usa_states_aggregated_data_on_click(_n_clicks,state_info,hideout):
         current_feature = None
         hideout['active_state'] = ''
 
-    cost_distributions = callbacks.create_cost_distributions_for_state(state_name)
-    return cost_distributions[0], cost_distributions[1], current_feature, hideout
+    disaster_bar_plot, fema_bar_plot, dis_header, fema_header = callbacks.create_cost_distributions_for_state(state_name)
+    return disaster_bar_plot, dis_header, fema_bar_plot, fema_header, current_feature, hideout
 
 @app.callback(Output("info", "children"), [Input("usa-states", "hover_feature")])
 def info_hover(feature):

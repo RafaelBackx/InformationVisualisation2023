@@ -25,7 +25,13 @@ def create_cost_distributions_for_state(state):
     disaster_map = {key:key for key,_ in disaster_cost_distribution.items()}
     disaster_bar_plot = components.generate_cost_bar_plots(disaster_cost_distribution, disaster_map)
     fema_bar_plot = components.generate_cost_bar_plots(fema_cost_distribution, fema_disaster_map)
-    return disaster_bar_plot, fema_bar_plot
+    if state:
+        dis_header = f"Disaster cost distribution over subgroups {state}"
+        fema_header = f"Disaster cost distribution over mitigations {state}."
+    else:
+        dis_header = "Disaster cost distribution over subgroups U.S."
+        fema_header = "Disaster cost distribution over mitigations U.S."
+    return disaster_bar_plot, fema_bar_plot, dis_header, fema_header
 
 def create_fema_disaster_graph(df_disasters, year):
     df = us_layout.compare_fema_actions_to_disaster_costs(df_disasters, year)
