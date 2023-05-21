@@ -147,6 +147,7 @@ def compare_deaths_before_and_after_fema(df_disasters):
                         y=0.8,
                         bordercolor='black',
                         borderwidth=1)
+    fig.update_layout(hovermode="x unified")
     return fig
 
 def compare_mitigation_and_damages_graph(df_disasters):
@@ -312,7 +313,7 @@ us_layout = html.Div(id='us_layout', children=[
                     )
                 ],
                 width=6,
-                className="column us-map-column gdp-column"
+                className="column us-map-column gdp-column mit-map"
             ),
             dbc.Col(children=[
                     dbc.Card(

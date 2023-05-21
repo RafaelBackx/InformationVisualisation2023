@@ -5,7 +5,7 @@
     z-index: 1000;
     background-color: white;
     border-radius: 25px;
-    opacity: 0.75;
+    opacity: 0.85;
 }
 
 .map-legend-item-wrapper {
@@ -147,7 +147,7 @@
 
 .us-map-row {
     width: 100%;
-
+    height: fit-content;
 }
 
 .us-graphs-row {
@@ -156,7 +156,7 @@
 }
 
 .us-map-column {
-    padding-right: 0;
+    height: 50vh;
     padding-bottom: 0 !important;
 }
 
@@ -224,5 +224,9 @@
 
     .show-events {
         position: initial;
+    }
+
+    .mit-map {
+        padding-bottom: 6px !important;
     }
 }

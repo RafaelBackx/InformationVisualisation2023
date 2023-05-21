@@ -563,7 +563,6 @@ def generate_state_damages_info(df, feature = None):
     return header + [html.B(state_name), html.Br(),
                      "{:.3f}%".format((state_spent / total_spent) * 100)]
 
-
 def generate_country_info(df, current_year, feature=None):
     header = [html.H6("% of GDP in damages", style={'margin':0}), html.Br(), html.H6("because of Natural disasters", style={'margin':0})]
     if not feature:
