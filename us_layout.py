@@ -212,8 +212,25 @@ def generate_states_colours(data):
         total_spent_state = state_spending['total']
         total_spent_us = get_total_spent()
         total_spent_us = max(total_spent_us, 1)
-        # colour = util.ratio_to_gradient(total_spent_state/total_spent_us)
         colour_map[id] = (total_spent_state/total_spent_us) * 100
+    return colour_map
+
+def generate_states_colours_damages(data):
+    features = data['features']
+    state_iso_original = [feature['properties']['ISO_1'] for feature in features]
+    state_iso = [name.split('-')[1] for name in state_iso_original]
+    state_names = [converter.abbrev_to_us_state[abbrev] for abbrev in state_iso]
+
+    us_damages = df_disasters[(df_disasters['ISO'] == 'USA') & (df_disasters['us state'].notna())].sum(numeric_only=True)["Total Damages, Adjusted ('000 US$)"]
+
+    grouped = df_disasters[(df_disasters['ISO'] == 'USA') & (df_disasters['us state'].notna())].groupby('us state').sum(numeric_only=True)
+    grouped['ratio'] = (grouped["Total Damages, Adjusted ('000 US$)"] / us_damages) * 100
+    state_names = grouped.index
+    colour_map = {}
+    for _,state_name in enumerate(state_names):
+        id = f'US-{converter.us_state_to_abbrev[state_name]}'
+        ratio = grouped.loc[state_name,'ratio']
+        colour_map[id] = ratio
     return colour_map
 
 death_graph = dcc.Graph(id='death_graph', figure=compare_deaths_before_and_after_fema(df_disasters))
@@ -228,8 +245,9 @@ ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] 
 colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
 
 state_info = html.Div(id="info", className="map-info", style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
+state_damages_info = html.Div(id="damages_info", className="map-info", style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
 
-map = dl.Map(
+map1 = dl.Map(
     maxBounds=[[-90, -180], [90, 180]],
     maxBoundsViscosity=1.0,
     maxZoom=18,
@@ -242,7 +260,7 @@ map = dl.Map(
         # https://datahub.io/core/geo-countries#resource-countries
         dl.GeoJSON(
             data=usa_states_data,
-            id="usa-states",
+            id="usa-states-1",
             hideout=dict(colorscale=colorscale,classes=classes,style=style,active_state='',ratio_map=generate_states_colours(usa_states_data)),
             # Invisible polygons,
             options=dict(style = ns('draw_polygon')),
@@ -252,7 +270,32 @@ map = dl.Map(
         state_info
     ],
     style={"width": "100%", "height": "100%", "display": "block"},
-    id="usa-map")
+    id="usa-map-1")
+
+map2 = dl.Map(
+    maxBounds=[[-90, -180], [90, 180]],
+    maxBoundsViscosity=1.0,
+    maxZoom=18,
+    minZoom=2,
+    zoom=10,
+    center=(40.5545549008774, -102.17859725490524),
+    bounceAtZoomLimits=True,
+    children=[
+        dl.TileLayer(),
+        # https://datahub.io/core/geo-countries#resource-countries
+        dl.GeoJSON(
+            data=usa_states_data,
+            id="usa-states-2",
+            hideout=dict(colorscale=colorscale,classes=classes,style=style,active_state='',ratio_map=generate_states_colours_damages(usa_states_data)),
+            # Invisible polygons,
+            options=dict(style = ns('draw_polygon')),
+            zoomToBounds=True,
+            hoverStyle=arrow_function(dict(weight=2, color='#666', dashArray=''))),  # Gray border on hover (line_thickness, color, line_style)
+        colorbar,
+        state_damages_info
+    ],
+    style={"width": "100%", "height": "100%", "display": "block"},
+    id="usa-map-2")
 
 
 us_layout = html.Div(id='us_layout', children=[
@@ -262,14 +305,27 @@ us_layout = html.Div(id='us_layout', children=[
                 children=[
                     dbc.Card(
                         children=[
-                            dbc.CardHeader(children=['USA Map']),
-                            dbc.CardBody(children=map)
+                            dbc.CardHeader(children=["USA Map - Mitigation ratio's"]),
+                            dbc.CardBody(children=map1)
                         ],
                         className='map-card'
                     )
                 ],
+                width=6,
                 className="column map-column us-map-column"
-            )
+            ),
+            dbc.Col(children=[
+                    dbc.Card(
+                        children=[
+                            dbc.CardHeader(children=["USA Map - Damage ratio's"]),
+                            dbc.CardBody(children=map2)
+                        ],
+                        className='map-card'
+                    )
+                ],
+                width=6,
+                className="column map-column us-map-column"
+            ),
         ],
         className="map-row us-map-row"
     ),

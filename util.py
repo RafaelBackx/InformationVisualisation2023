@@ -191,6 +191,12 @@ def get_total_spent(df_properties):
     total_spent = total_properties['actualAmountPaid']
     return total_spent
 
+def get_total_damages(df_disasters):
+    return df_disasters[(df_disasters['ISO'] == 'USA') & (df_disasters['us state'].notna())].sum(numeric_only=True)["Total Damages, Adjusted ('000 US$)"]
+
+def get_total_damages_state(df_disasters, state_name):
+    return df_disasters[(df_disasters['ISO'] == 'USA') & (df_disasters['us state'] == state_name)].sum(numeric_only=True)["Total Damages, Adjusted ('000 US$)"]
+
 
     
     

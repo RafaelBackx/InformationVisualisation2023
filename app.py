@@ -265,9 +265,9 @@ def country_show_events(n_clicks, io, current_year, country):
     country_code = country["properties"]["ISO_A3"]
     return callbacks.show_events_button_clicked(disaster_data, current_year, country_code), is_open
 
-@app.callback(Output('usa-states', 'hideout'),
-              Input('usa-states', 'click_feature'), 
-              State('usa-states', 'hideout'), prevent_initial_call=True)
+@app.callback(Output('usa-states-1', 'hideout'),
+              Input('usa-states-1', 'click_feature'), 
+              State('usa-states-1', 'hideout'), prevent_initial_call=True)
 def update_aggregated_data_on_state_click(clicked_state,  hideout):
     global current_state
     if (clicked_state):
@@ -278,11 +278,11 @@ def update_aggregated_data_on_state_click(clicked_state,  hideout):
 
 @app.callback([Output('us-cost-distribution-subgroups', 'children', allow_duplicate=True),
                Output('us-cost-distribution-mitigations', 'children'), 
-               Output('usa-states', 'click_feature'), 
-               Output('usa-states', 'hideout', allow_duplicate=True)], 
-               Input('usa-states', 'n_clicks'), 
-               State('usa-states', 'click_feature'), 
-               State('usa-states', 'hideout'),prevent_initial_call='initial_duplicate')
+               Output('usa-states-1', 'click_feature'), 
+               Output('usa-states-1', 'hideout', allow_duplicate=True)], 
+               Input('usa-states-1', 'n_clicks'), 
+               State('usa-states-1', 'click_feature'), 
+               State('usa-states-1', 'hideout'),prevent_initial_call='initial_duplicate')
 def update_usa_states_aggregated_data_on_click(_n_clicks,state_info,hideout):
     global current_state
     current_feature = state_info
@@ -299,9 +299,13 @@ def update_usa_states_aggregated_data_on_click(_n_clicks,state_info,hideout):
     cost_distributions = callbacks.create_cost_distributions_for_state(state_name)
     return cost_distributions[0], cost_distributions[1], current_feature, hideout
 
-@app.callback(Output("info", "children"), [Input("usa-states", "hover_feature")])
+@app.callback(Output("info", "children"), [Input("usa-states-1", "hover_feature")])
 def info_hover(feature):
     return callbacks.state_hover(feature, df_properties)
+
+@app.callback(Output("damages_info", "children"), [Input("usa-states-2", "hover_feature")])
+def info_hover(feature):
+    return callbacks.state_hover_damages(feature, us_layout.df_disasters)
 
 @app.callback(Output("info_countries", "children", allow_duplicate=True), [Input("countries", "hover_feature")], State('world-year-slider', 'value'))
 def info_map(feature, current_year):
