@@ -36,43 +36,6 @@ def get_events_without_location(df: pd.DataFrame):
     data = df[df['Latitude'].isnull() & df['Longitude'].isnull()]
     return data
 
-def get_gdp_data(df_gdp: pd.DataFrame, df_disaster: pd.DataFrame, years, country = None, categories = False):
-    columns = years + ['Country Code']
-    columns = [str(c) for c in columns]
-    gdp_data_filtered = df_gdp[columns]
-    if (country):
-        gdp_data_reduced = gdp_data_filtered[gdp_data_filtered['Country Code'] == country]
-        disaster_columns = ['Start Year', 'ISO']
-        if (categories): disaster_columns += ['Disaster Subgroup']
-        disaster_data_by_year = df_disaster.groupby(disaster_columns, as_index=False).sum(numeric_only=True)
-        disaster_data_by_year = disaster_data_by_year[disaster_data_by_year['ISO'] == country] 
-    else:
-        disaster_columns = ['Start Year']
-        if (categories): disaster_columns += ['Disaster Subgroup']
-        gdp_data_reduced = pd.DataFrame([gdp_data_filtered.mean(numeric_only=True)], columns=[str(y) for y in years])
-        disaster_data_by_year = df_disaster.groupby(disaster_columns, as_index=False).sum(numeric_only=True)
-        disaster_data_by_year['ISO'] = 'WORLD'
-
-    def calculate_gdp_share(row):
-        year = str(int(row['Start Year']))
-        if (not (year in gdp_data_reduced.columns)):
-            return 0
-        gdp = gdp_data_reduced[year]
-        damages = row["Total Damages, Adjusted ('000 US$)"] * 1000
-        return (damages / gdp) * 100
-
-    columns_to_fill = ['Start Year', 'ISO', 'Disaster Subgroup']
-
-    if (disaster_data_by_year.empty):
-        disaster_data_by_year["share"] = 0
-    else:
-        disaster_data_by_year['share'] = disaster_data_by_year.apply(calculate_gdp_share, axis=1)
-    
-    if categories:
-        filled_df = fill_missing_columns_with_default(disaster_data_by_year,columns_to_fill,["Total Damages, Adjusted (\'000 US$)", 'share'],[0,0])
-        return filled_df
-    return disaster_data_by_year
-
 def convert_events_to_geojson(df):
     geojson = to_geojson(df=df, lat="Latitude", lon="Longitude", properties=[
                          "Dis No", "Disaster Subgroup"])  # More things can be included in the properties when it's needed

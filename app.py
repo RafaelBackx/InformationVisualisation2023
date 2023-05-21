@@ -63,9 +63,6 @@ server = Flask("Natural Disasters Dashboard")
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True, prevent_initial_callbacks='initial_duplicate')
 server=app.server
 
-
-
-
 ################
 #              #
 #  COMPONENTS  #
@@ -299,7 +296,6 @@ def info_hover(feature):
 @app.callback(Output("info_countries", "children", allow_duplicate=True), [Input("countries", "hover_feature")], State('world-year-slider', 'value'))
 def info_map(feature, current_year):
     return callbacks.country_hover(feature, current_year, gdp_data)
-
 
 if __name__ == "__main__":
     app.run_server(debug=True)
