@@ -114,6 +114,8 @@ map_legend = html.Div(children=[
 ], className="map-legend")
 
 map = dl.Map(
+    id="map",
+    style={'width': '100%', 'height': '100vh', 'margin': "auto", "display": "block"},
     maxBounds=[[-90, -180], [90, 180]],
     maxBoundsViscosity=1.0,
     maxZoom=18,
@@ -140,10 +142,10 @@ map = dl.Map(
         ),
         dl.GestureHandling(),
         map_legend,
-        world_slider_wrapper
+        world_slider_wrapper,
+        html.Div(id="log")
     ],
-    style={"width": "100%", "height": "100%", "display": "block"},
-    id="map")
+    )
 
 world_gdp_graph = dcc.Graph(
     id="world-gdp-graph", style={"height": "30vh", "width": "100%", "marginTop": "5px"})
@@ -161,6 +163,7 @@ home_layout = html.Div(
                                 dbc.CardHeader(
                                     children=[
                                         "World Map"
+                                        
                                     ]
                                 ),
                                 dbc.CardBody(

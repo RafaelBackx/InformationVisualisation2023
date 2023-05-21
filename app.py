@@ -310,5 +310,9 @@ def info_hover(feature):
 def info_map(feature, current_year):
     return callbacks.country_hover(feature, current_year, gdp_data)
 
+@app.callback(Output("log", "children"), [Input("map", "bounds")])
+def log(bounds):
+    return json.dumps(bounds)
+
 if __name__ == "__main__":
     app.run_server(debug=True)
