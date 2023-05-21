@@ -560,7 +560,10 @@ def generate_country_info(df, feature=None):
     else:
         df = df.groupby('ISO').sum(numeric_only=True)
         country_name = feature['properties']['ISO_A3']
-        value = df.loc[country_name, "share"]
+        if country_name in df:
+            value = df.loc[country_name, "share"]
+        else:
+            value = 0
         return header + [html.B(country_name), html.Br(), format(value)]
 
         
