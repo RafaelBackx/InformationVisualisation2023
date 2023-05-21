@@ -103,8 +103,9 @@ def get_disaster_and_fema_cost_distribution_per_state(state):
     fema_action_map = {}
 
     for disaster_subgroup in disaster_subgroups:
-        spent_on_disaster = sum(state_disaster_grouped[state_disaster_grouped['Disaster Subgroup'] == disaster_subgroup]["Total Damages, Adjusted (\'000 US$)"], 0)
-        disaster_subgroup_map[disaster_subgroup] = spent_on_disaster
+        spent_on_disaster = sum(state_disaster_grouped[state_disaster_grouped['Disaster Subgroup'] == disaster_subgroup]["Total Damages, Adjusted ('000 US$)"], 0)
+        if (spent_on_disaster > 0):
+            disaster_subgroup_map[disaster_subgroup] = spent_on_disaster
     
     for fema_action in fema_actions:
         spent_on_action = sum(state_fema_grouped[state_fema_grouped['propertyAction'] == fema_action]['actualAmountPaid'], 0)
@@ -112,41 +113,26 @@ def get_disaster_and_fema_cost_distribution_per_state(state):
             to_prevent_disaster = converter.fema_action_to_disaster[fema_action]
         else:
             continue
-        fema_action_map[fema_action] = [spent_on_action, to_prevent_disaster]
+        if (spent_on_action > 0):
+            fema_action_map[fema_action] = [spent_on_action, to_prevent_disaster]
     
     return disaster_subgroup_map, fema_action_map
 
 def compare_deaths_before_and_after_fema(df_disasters):
-    fema_date = 1995
-    us_disasters = df_disasters[df_disasters['ISO'] == 'USA'].groupby(['Start Year', 'us state'], as_index=False).sum(numeric_only=True)
-    before_fema = us_disasters[us_disasters['Start Year'] < fema_date].groupby('us state', as_index=False).sum(numeric_only=True)
-    number_of_deaths_before_fema = before_fema['Total Deaths'].sum()
-    number_of_events_per_year_before_fema = len(us_disasters[us_disasters['Start Year'] <= fema_date])
-    death_ratio_before = np.round(number_of_deaths_before_fema/number_of_events_per_year_before_fema)
+    fema_date = 1989
+    us_disasters = df_disasters[df_disasters['ISO'] == 'USA']
 
-    after_fema = us_disasters[us_disasters['Start Year'] >= fema_date].groupby('us state', as_index=False).sum(numeric_only=True)
-    number_of_deaths_after_fema = after_fema['Total Deaths'].sum()
-    number_events_per_year_after_fema = len(us_disasters[us_disasters['Start Year'] > fema_date])
-    death_ratio_after = np.round(number_of_deaths_after_fema / number_events_per_year_after_fema)
+    before_fema = us_disasters[us_disasters['Start Year'] < fema_date].groupby('us state', as_index=False).mean(numeric_only=True)
+    after_fema = us_disasters[us_disasters['Start Year'] >= fema_date].groupby('us state', as_index=False).mean(numeric_only=True)
 
-    new_df = pd.DataFrame(columns=['state', 'Deaths before Fema', 'Deaths after Fema'])
-    new_df['state'] = after_fema['us state']
-    new_df['Deaths before Fema'] = new_df.apply(lambda row: sum(before_fema[before_fema['us state'] == row['state']]['Total Deaths'], 0), axis=1)
-    new_df['Deaths after Fema'] = new_df.apply(lambda row: sum(after_fema[after_fema['us state'] == row['state']]['Total Deaths'],0), axis=1)
-    fig = go.Figure(data=[
-        go.Bar(x=new_df['state'], y=new_df['Deaths before Fema'], name='Deaths before Fema'),
-        go.Bar(x=new_df['state'], y=new_df['Deaths after Fema'], name='Deaths after Fema')
-    ])
-    fig.update_layout(barmode='group',title=f"Death toll comparison before Fema was introduced and after (Fema's first datapoint dates from 1995)")
-    fig.add_annotation(text=f'Average deaths per disaser <br>before Fema: {death_ratio_before} <br>after Fema: {death_ratio_after}', 
-                        align='left',
-                        showarrow=False,
-                        xref='paper',
-                        yref='paper',
-                        x=1.12,
-                        y=0.8,
-                        bordercolor='black',
-                        borderwidth=1)
+    fig = go.Figure(
+        data=[
+            go.Bar(x=before_fema['us state'], y=before_fema['Total Deaths'], name='Mean death rate before FEMA'),
+            go.Bar(x=after_fema['us state'], y=after_fema['Total Deaths'], name='Mean death rate after FEMA')
+        ]
+    )
+    fig.update_layout(barmode='group',title=f"Average death comparison before and after Fema's actions (Fema's first actions date from 1989)")
+    fig.update_layout(hovermode="x unified")
     return fig
 
 def compare_mitigation_and_damages_graph(df_disasters):

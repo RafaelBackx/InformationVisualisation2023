@@ -72,7 +72,7 @@ fema_action_to_disaster = {
     'Floodproofed': 'Hydrological',
     'Safe Room/Wind Shelter': 'Meteorological',
     'Seismic Retrofit': 'Geophysical',
-    'Wildfire Retrofit': 'Geophysical',
+    'Wildfire Retrofit': 'Climatological',
     'Wind Retrofit': 'Meteorological',
     'Wind Retrofit Advanced(A-P804)': 'Meteorological',
     'Wind Retrofit Basic (B-P804)': 'Meteorological',

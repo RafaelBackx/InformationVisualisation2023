@@ -31,7 +31,6 @@ DISASTER_SUBGROUPS = [
 
 def generate_cost_bar_plots(data,colour_map=None,log=False):
     data = {key:value for key,value in data.items() if value > 0}
-
     labels = list(data.keys())
     values = list(data.values())
 
