@@ -109,3 +109,6 @@ def slider_change(events, gdp_data, current_year, affected_filter, gdp_filter, c
 
 def state_hover(feature, df):
     return components.generate_state_info(df, feature)
+
+def country_hover(feature, df):
+    return components.generate_country_info(df, feature)

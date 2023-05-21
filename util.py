@@ -177,3 +177,8 @@ def get_total_spent(df_properties):
     total_properties = df_properties.sum(numeric_only=True)
     total_spent = total_properties['actualAmountPaid']
     return total_spent
+
+
+    
+    
+   
