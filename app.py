@@ -1,22 +1,15 @@
 import pandas as pd
 import dash_leaflet as dl
 import dash_bootstrap_components as dbc
-import dash
-from dash import Dash, html, Input, Output, dcc, State, ALL, dash
-from dash_extensions.javascript import arrow_function, Namespace
-from dash.exceptions import PreventUpdate
-from dash_iconify import DashIconify
+from dash import Dash, html, Input, Output, State
+from dash_extensions.javascript import Namespace
 from flask import Flask
-import plotly.express as px
-import dash_leaflet.express as dlx
 import json
 
 import util
 import components
 import callbacks
 
-from time import sleep
-import converter as state_converter
 
 import us_layout
 import home_layout
@@ -295,7 +288,7 @@ def update_usa_states_aggregated_data_on_click(_n_clicks,state_info,hideout):
         current_feature = None
         hideout['active_state'] = ''
 
-    disaster_bar_plot, fema_bar_plot, dis_header, fema_header = callbacks.create_cost_distributions_for_state(state_name)
+    disaster_bar_plot, fema_bar_plot, dis_header, fema_header = callbacks.create_cost_distributions_for_state(state_name,df_properties,disaster_data)
     return disaster_bar_plot, dis_header, fema_bar_plot, fema_header, current_feature, hideout
 
 @app.callback(Output("info", "children"), [Input("usa-states-1", "hover_feature")])

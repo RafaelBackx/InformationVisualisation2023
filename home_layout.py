@@ -1,16 +1,11 @@
-import pandas as pd
 import dash_leaflet as dl
 import dash_leaflet.express as dlx
 import dash_bootstrap_components as dbc
-from dash import Dash, html, Input, Output, dcc, State, ALL, dash
+from dash import html, dcc
 from dash_extensions.javascript import arrow_function, assign, Namespace
 from dash_extensions import EventListener
-from dash.exceptions import PreventUpdate
 from dash_iconify import DashIconify
-import plotly.express as px
-import json
 import util
-import numpy as np
 
 ns = Namespace("dashExtensions", "default")
 

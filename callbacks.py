@@ -1,25 +1,17 @@
-import plotly.express as px
-from dash import dcc
-import dash_bootstrap_components as dbc
-import pandas as pd
-
 import components
-import converter as state_converter
 import us_layout
 import util
 import locale
 
 locale.setlocale(locale.LC_ALL, '')
 
-from dash import html
-
 def update_map_on_slider_increment(clicked_state,data):
     colour_map = us_layout.generate_states_colours(data)
     return {'active_state': clicked_state, 'colour_map': colour_map}
 
 
-def create_cost_distributions_for_state(state):
-    disaster_cost_distribution, fema_cost_distribution = us_layout.get_disaster_and_fema_cost_distribution_per_state(state)
+def create_cost_distributions_for_state(state,df_properties,df_disasters):
+    disaster_cost_distribution, fema_cost_distribution = util.get_disaster_and_fema_cost_distribution_per_state(state,df_properties,df_disasters)
     fema_disaster_map = {key: value[1] for key,value in fema_cost_distribution.items()}
     fema_cost_distribution = {key: value[0] for key,value in fema_cost_distribution.items()}
     disaster_map = {key:key for key,_ in disaster_cost_distribution.items()}
@@ -33,25 +25,6 @@ def create_cost_distributions_for_state(state):
         dis_header = "Disaster cost distribution over subgroups U.S."
         fema_header = "Disaster cost distribution over mitigations U.S."
     return disaster_bar_plot, fema_bar_plot, dis_header, fema_header
-
-def create_fema_disaster_graph(df_disasters, year):
-    df = us_layout.compare_fema_actions_to_disaster_costs(df_disasters, year)
-    categories = df['Disaster Subgroup'].unique()
-    tabs = []
-    for category in categories:
-        fig = px.line(df[df['Disaster Subgroup'] == category],'Start Year', ["Total Damages, Adjusted ('000 US$)", 'Total Mitigated'], log_y=False)
-        tab = components.create_tab_with_fig(fig,category)
-        tabs.append(tab)
-    return tabs
-
-def create_fema_cost_distribution(year,categories):
-    children = []
-    for category in categories:
-        data = us_layout.get_fema_cost_distribution(None,year,category)
-        fig = px.bar(data,category,'spent percentage')
-        child = dbc.Tab(dcc.Graph(figure=fig), label=category)
-        children.append(child)
-    return children
 
 def changed_affected_filter(events, current_year, current_filter, country_code = None):
     # If a country code is given filter events using the code

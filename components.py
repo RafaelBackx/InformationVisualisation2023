@@ -8,8 +8,6 @@ from dash_iconify import DashIconify
 from dash import html, dcc
 from dash_extensions.javascript import arrow_function, Namespace
 
-import json
-
 import util
 
 ns = Namespace("dashExtensions", "default")
@@ -574,6 +572,19 @@ def generate_country_info(df, current_year, feature=None):
         else:
             value = 0
         return header + [html.B(country_name), html.Br(), format(value)]
+    
+def generate_average_death_comparison_bar_plot(df_disasters):
+    before_fema, after_fema = util.compare_deaths_before_and_after_fema(df_disasters)
+
+    fig = go.Figure(
+        data=[
+            go.Bar(x=before_fema['us state'], y=before_fema['Total Deaths'], name='Mean death rate before FEMA'),
+            go.Bar(x=after_fema['us state'], y=after_fema['Total Deaths'], name='Mean death rate after FEMA')
+        ]
+    )
+    fig.update_layout(barmode='group',title=f"Average death comparison before and after Fema's actions (Fema's first actions date from 1989)")
+    fig.update_layout(hovermode="x unified")
+    return fig
 
         
                 

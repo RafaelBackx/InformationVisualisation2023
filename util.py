@@ -1,11 +1,10 @@
 import pandas as pd
 from pandas_geojson import to_geojson
-from shapely.geometry import shape
 import shapely
 import json
 from geopy.geocoders import Nominatim
 import zipcodes
-from converter import abbrev_to_us_state, us_state_to_abbrev
+from converter import abbrev_to_us_state, us_state_to_abbrev, fema_action_to_disaster
 import matplotlib as mpl
 
 geolocator = Nominatim(user_agent='geoapiExercises')
@@ -160,7 +159,78 @@ def get_total_damages(df_disasters):
 def get_total_damages_state(df_disasters, state_name):
     return df_disasters[(df_disasters['ISO'] == 'USA') & (df_disasters['us state'] == state_name)].sum(numeric_only=True)["Total Damages, Adjusted ('000 US$)"]
 
+def get_disaster_and_fema_cost_distribution_per_state(state,df_properties, df_disasters):
+    if (state):
+        state_disaster_info = df_disasters[df_disasters['us state'] == state]
+        state_fema_info = df_properties[df_properties['state'] == state]
+    else:
+        state_disaster_info = df_disasters
+        state_fema_info = df_properties
 
+    state_disaster_grouped = state_disaster_info.groupby(['Disaster Subgroup'], as_index=False).sum(numeric_only=True)
+    state_fema_grouped = state_fema_info.groupby(['propertyAction'], as_index=False).sum(numeric_only=True)
+
+    disaster_subgroups = state_disaster_grouped['Disaster Subgroup'].values
+    fema_actions = state_fema_grouped['propertyAction'].values
+
+    disaster_subgroup_map = {}
+    fema_action_map = {}
+
+    for disaster_subgroup in disaster_subgroups:
+        spent_on_disaster = sum(state_disaster_grouped[state_disaster_grouped['Disaster Subgroup'] == disaster_subgroup]["Total Damages, Adjusted ('000 US$)"], 0)
+        if (spent_on_disaster > 0):
+            disaster_subgroup_map[disaster_subgroup] = spent_on_disaster
     
+    for fema_action in fema_actions:
+        spent_on_action = sum(state_fema_grouped[state_fema_grouped['propertyAction'] == fema_action]['actualAmountPaid'], 0)
+        if (fema_action in fema_action_to_disaster):
+            to_prevent_disaster = fema_action_to_disaster[fema_action]
+        else:
+            continue
+        if (spent_on_action > 0):
+            fema_action_map[fema_action] = [spent_on_action, to_prevent_disaster]
     
-   
+    return disaster_subgroup_map, fema_action_map
+
+def compare_deaths_before_and_after_fema(df_disasters):
+    fema_date = 1989
+    us_disasters = df_disasters[df_disasters['ISO'] == 'USA']
+
+    before_fema = us_disasters[us_disasters['Start Year'] < fema_date].groupby('us state', as_index=False).mean(numeric_only=True)
+    after_fema = us_disasters[us_disasters['Start Year'] >= fema_date].groupby('us state', as_index=False).mean(numeric_only=True)
+
+    return before_fema,after_fema
+
+def generate_states_spent_ratio(data,df_properties):
+    features = data['features']
+    state_iso_original = [feature['properties']['ISO_1'] for feature in features]
+    state_iso = [name.split('-')[1] for name in state_iso_original]
+    state_names = [abbrev_to_us_state[abbrev] for abbrev in state_iso]
+
+    colour_map = {}
+    for idx,state_name in enumerate(state_names):
+        id = state_iso_original[idx]
+        state_spending = get_state_spending(state_name,df_properties)
+        total_spent_state = state_spending['total']
+        total_spent_us = get_total_spent(df_properties)
+        total_spent_us = max(total_spent_us, 1)
+        colour_map[id] = (total_spent_state/total_spent_us) * 100
+    return colour_map
+
+def generate_states_damages_ratio(data, df_disasters):
+    features = data['features']
+    state_iso_original = [feature['properties']['ISO_1'] for feature in features]
+    state_iso = [name.split('-')[1] for name in state_iso_original]
+    state_names = [abbrev_to_us_state[abbrev] for abbrev in state_iso]
+
+    us_damages = get_total_damages(df_disasters)
+
+    grouped = df_disasters[(df_disasters['ISO'] == 'USA') & (df_disasters['us state'].notna())].groupby('us state').sum(numeric_only=True)
+    grouped['ratio'] = (grouped["Total Damages, Adjusted ('000 US$)"] / us_damages) * 100
+    state_names = grouped.index
+    colour_map = {}
+    for _,state_name in enumerate(state_names):
+        id = f'US-{us_state_to_abbrev[state_name]}'
+        ratio = grouped.loc[state_name,'ratio']
+        colour_map[id] = ratio
+    return colour_map
