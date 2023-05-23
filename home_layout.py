@@ -25,7 +25,7 @@ classes = [0, 0.5, 1, 5, 10, 50, 100]
 colorscale = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
 style = dict(weight=2, opacity=1, color='black', dashArray='', fillOpacity=0.7)
 ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
-colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomright")
+colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=200, height=20, position="bottomright", className="colorbar")
 
 country_info = html.Div(id="info_countries", className="map-info", style={"position": "absolute", "top": "10px", "left": "10px", "zIndex": "1000"})
 
@@ -72,41 +72,37 @@ world_slider_wrapper = EventListener(
     ], id="world-slider-wrapper", events=[{"event": "mouseout", "props": ["type"]}, {"event": "mouseover", "props": ["type"]}])
 
 map_legend = html.Div(children=[
-    dbc.Col(children=[
-        dbc.Row(children=[
-            dbc.Col(children=[
-                geophysical_icon
-            ]),
-            dbc.Col(children=[
-                html.P("Geophysical", className="map-legend-item-text")
-            ], className="map-legend-item")
-        ]),
-        dbc.Row(children=[
-            dbc.Col(children=[
-                meteorological_icon
-            ]),
-            dbc.Col(children=[
-                html.P("Meteorological", className="map-legend-item-text")
-            ], className="map-legend-item")
-        ]),
-        dbc.Row(children=[
-            dbc.Col(children=[
-                hydrological_icon
-            ]),
-            dbc.Col(children=[
-                html.P("Hydrological", className="map-legend-item-text")
-            ], className="map-legend-item")
-        ]),
-        dbc.Row(children=[
-            dbc.Col(children=[
-                climatological_icon
-            ]),
-            dbc.Col(children=[
-                html.P("Climatological", className="map-legend-item-text")
-            ], className="map-legend-item")
-        ])
-    ], className="map-legend-item-wrapper")
-], className="map-legend")
+    dbc.Row(children=[
+        dbc.Col(children=[
+            html.Div(
+                children=[
+                    geophysical_icon, html.P("Geophysical")
+                ], className="legend-item"
+            )
+        ], width=3),
+        dbc.Col(children=[
+            html.Div(
+                children=[
+                    meteorological_icon, html.P("Meteorological")
+                ], className="legend-item"
+            )
+        ], width=3),
+        dbc.Col(children=[
+            html.Div(
+                children=[
+                    hydrological_icon, html.P("Hydrological")
+                ], className="legend-item"
+            )
+        ], width=3),
+        dbc.Col(children=[
+            html.Div(
+                children=[
+                    climatological_icon, html.P("Climatological")
+                ], className="legend-item"
+            )
+        ], width=3)
+    ])
+])
 
 map = dl.Map(
     id="map",
@@ -136,7 +132,6 @@ map = dl.Map(
                    options=dict(pointToLayer=ns("draw_marker"))), name="Events", checked=True)]
         ),
         dl.GestureHandling(),
-        map_legend,
         world_slider_wrapper,
         html.Div(id="log")
     ],
@@ -163,7 +158,18 @@ home_layout = html.Div(
                                 ),
                                 dbc.CardBody(
                                     children=[
-                                        map
+                                        dbc.Row(
+                                            children=[
+                                                map_legend
+                                            ],
+                                            style={"height": "10%"}
+                                        ),
+                                        dbc.Row(
+                                            children=[
+                                                map
+                                            ],
+                                            style={"height": "90%", "marginRight": "0", "marginLeft": "0"}
+                                        )
                                     ]
                                 )
                             ],

@@ -301,42 +301,37 @@ def generate_country_popup(disaster_data, country, current_year):
         src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABIUlEQVR4nOVVW04CQRCsQ4gHM3gF8RogF8CDAAcQf30kggehRnfg2zLTLjjgZkKv7peTdLLZna7qrtmuARxLAc8KeERXSwFK0SXBkwIe2gMQ1yLmiui5cyPORMxEDEoEM5OBWLQo7r7OnZaq6Im4EzHZv9vgXMRYxEoBWwtiKeImfcsIJpbr6V7EpQLi7nAbImqNvrfbb3DiowD+FWmPl8RkKVeuo6i80owd4Ko7GXkIXlsQLEvjr9wCnPJod+CNmPV0Kp/QlgRVlv8D81ii1Z9J1LRsiPwEwy5/0/fkRScTGMka/ZMH7Q0XLvADkoCqWLkHvLbcxYHZRTPAkYgXBWws0jMxzGURcWu5Jam6t2tikDb84sKZirjy5mIP8i8v/U/2bn/Cuda4GwAAAABJRU5ErkJggg==", style={"width": "auto", "height": "24px"})
 
     map_legend = html.Div(children=[
-        dbc.Col(children=[
-            dbc.Row(children=[
-                dbc.Col(children=[
-                    geophysical_icon
-                ]),
-                dbc.Col(children=[
-                    html.P("Geophysical", className="map-legend-item-text")
-                ], className="map-legend-item")
-            ]),
-            dbc.Row(children=[
-                dbc.Col(children=[
-                    meteorological_icon
-                ]),
-                dbc.Col(children=[
-                    html.P("Meteorological", className="map-legend-item-text")
-                ], className="map-legend-item")
-            ]),
-            dbc.Row(children=[
-                dbc.Col(children=[
-                    hydrological_icon
-                ]),
-                dbc.Col(children=[
-                    html.P("Hydrological", className="map-legend-item-text")
-                ], className="map-legend-item")
-            ]),
-            dbc.Row(children=[
-                dbc.Col(children=[
-                    climatological_icon
-                ]),
-                dbc.Col(children=[
-                    html.P("Climatological", className="map-legend-item-text")
-                ], className="map-legend-item")
-            ])
-        ], className="map-legend-item-wrapper")
-    ], className="map-legend")
-
+    dbc.Row(children=[
+            dbc.Col(children=[
+                html.Div(
+                    children=[
+                        geophysical_icon, html.P("Geophysical")
+                    ], className="legend-item"
+                )
+            ], width=3),
+            dbc.Col(children=[
+                html.Div(
+                    children=[
+                        meteorological_icon, html.P("Meteorological")
+                    ], className="legend-item"
+                )
+            ], width=3),
+            dbc.Col(children=[
+                html.Div(
+                    children=[
+                        hydrological_icon, html.P("Hydrological")
+                    ], className="legend-item"
+                )
+            ], width=3),
+            dbc.Col(children=[
+                html.Div(
+                    children=[
+                        climatological_icon, html.P("Climatological")
+                    ], className="legend-item"
+                )
+            ], width=3)
+        ])
+    ])
     animation_button = dbc.Button(children=[
         "Play",
         DashIconify(
@@ -418,7 +413,18 @@ def generate_country_popup(disaster_data, country, current_year):
                                             ),
                                             dbc.CardBody(
                                                 children=[
-                                                    country_map
+                                                    dbc.Row(
+                                            children=[
+                                                map_legend
+                                            ],
+                                            style={"height": "10%"}
+                                        ),
+                                        dbc.Row(
+                                            children=[
+                                                country_map
+                                            ],
+                                            style={"height": "90%", "marginRight": "0", "marginLeft": "0"}
+                                        )
                                                 ]
                                             )
                                         ],
