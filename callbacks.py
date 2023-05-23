@@ -19,11 +19,11 @@ def create_cost_distributions_for_state(state,df_properties,df_disasters):
     disaster_bar_plot = components.generate_cost_bar_plots(disaster_cost_distribution, disaster_map)
     fema_bar_plot = components.generate_cost_bar_plots(fema_cost_distribution, fema_disaster_map)
     if state:
-        dis_header = f"Disaster cost distribution over subgroups {state}"
-        fema_header = f"Disaster cost distribution over mitigations {state}."
+        dis_header = f"Damage distribution over disaster subgroups {state}"
+        fema_header = f"Mitigation cost distribution {state}."
     else:
-        dis_header = "Disaster cost distribution over subgroups U.S."
-        fema_header = "Disaster cost distribution over mitigations U.S."
+        dis_header = "Damage distribution over disaster subgroups U.S."
+        fema_header = "Mitigation cost distribution U.S."
     return disaster_bar_plot, fema_bar_plot, dis_header, fema_header
 
 def changed_affected_filter(events, current_year, current_filter, country_code = None):

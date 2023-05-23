@@ -141,7 +141,7 @@ def generate_gdp_graph(gdp_data, current_year, categories = False):
         gdp_fig = px.line(gdp_data, 'Start Year', 'share')
 
     gdp_fig.update_traces(mode="markers+lines", hovertemplate=None)
-    gdp_fig.update_layout(hovermode="x unified", xaxis_title="Year", xaxis=dict(
+    gdp_fig.update_layout(hovermode="x unified", xaxis_title="Year", yaxis_title="% of GDP in damages", xaxis=dict(
         tickformat="d"), margin=dict(l=0, r=0, t=0, b=0))
     return gdp_fig
 
