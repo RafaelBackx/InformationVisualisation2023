@@ -24,7 +24,7 @@ classes = [0,5,10,15,20,25]
 colorscale = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026']
 style = dict(weight=2, opacity=1, color='black', dashArray='', fillOpacity=0.7)
 ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
-colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=300, height=30, position="bottomleft")
+colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=200, height=20, position="bottomleft")
 
 state_info = html.Div(id="info", className="map-info", style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
 state_damages_info = html.Div(id="damages_info", className="map-info", style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})

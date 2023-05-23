@@ -1,25 +1,6 @@
-.map-legend {
-    position: absolute;
-    top: 70px;
-    right: 10px;
-    z-index: 1000;
-    background-color: white;
-    border-radius: 25px;
-    opacity: 0.85;
-}
-
-.map-legend-item-wrapper {
-    padding: 1rem;
-}
-
-.map-legend-item-text {
+.legend-item {
     display: flex;
-    align-items: center;
-    margin-bottom: 0;
-}
-
-.map-legend-item {
-    display: flex;
+    justify-content: space-evenly;
 }
 
 .map-row {
@@ -54,6 +35,7 @@
 .aggregated-card {
     height: 100%;
     width: 100%;
+    overflow: auto;
 }
 
 .gdp-card {
@@ -67,10 +49,12 @@
 }
 
 .map-column {
+    height: 100%;
     padding-right: 6px;
 }
 
 .aggregated-column {
+    height: 100%;
     padding-left: 6px;
 }
 
