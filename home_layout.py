@@ -76,32 +76,32 @@ map_legend = html.Div(children=[
         dbc.Col(children=[
             html.Div(
                 children=[
-                    geophysical_icon, html.P("Geophysical")
+                    geophysical_icon, html.P("Geophysical", className="legend-item-text")
                 ], className="legend-item"
             )
         ], width=3),
         dbc.Col(children=[
             html.Div(
                 children=[
-                    meteorological_icon, html.P("Meteorological")
+                    meteorological_icon, html.P("Meteorological", className="legend-item-text")
                 ], className="legend-item"
             )
         ], width=3),
         dbc.Col(children=[
             html.Div(
                 children=[
-                    hydrological_icon, html.P("Hydrological")
+                    hydrological_icon, html.P("Hydrological", className="legend-item-text")
                 ], className="legend-item"
             )
         ], width=3),
         dbc.Col(children=[
             html.Div(
                 children=[
-                    climatological_icon, html.P("Climatological")
+                    climatological_icon, html.P("Climatological", className="legend-item-text")
                 ], className="legend-item"
             )
         ], width=3)
-    ])
+    ], className="legend-row-wrapper")
 ])
 
 map = dl.Map(

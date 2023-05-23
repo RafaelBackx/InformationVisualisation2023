@@ -1,6 +1,19 @@
 .legend-item {
     display: flex;
     justify-content: space-evenly;
+    align-items: center;
+}
+
+.legend-item-text {
+    margin-bottom: 0;
+}
+
+.legend-row-wrapper {
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 5px;
+    border: 1px #D2D2D2 solid;
+    background-color: #F7F7F7;
 }
 
 .map-row {
