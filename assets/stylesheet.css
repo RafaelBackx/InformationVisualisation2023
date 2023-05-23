@@ -163,6 +163,10 @@
     padding: 6px 8px;
 }
 
+.modal-content {
+    overflow-y: scroll !important;
+}
+
 ::-webkit-scrollbar {
     width: 12px;
 }
@@ -213,10 +217,6 @@
     .affected-column {
         padding: 6px 0 0 0;
         width: 100%;
-    }
-
-    .modal-content {
-        overflow-y: scroll !important;
     }
 
     .show-events {
