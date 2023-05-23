@@ -49,12 +49,12 @@ def generate_aggregated_data_table(df):
 
     # Aggregate data and keep relevant columns
     yearly_data = df.groupby("Start Year").sum(numeric_only=True)[
-        ["Total Deaths", "No Injured", "No Affected", "No Homeless", "Reconstruction Costs ('000 US$)", "Insured Damages ('000 US$)", "Total Damages ('000 US$)"]]
+        ["Total Deaths", "No Injured", "No Affected", "No Homeless", "Reconstruction Costs, Adjusted ('000 US$)", "Insured Damages, Adjusted ('000 US$)", "Total Damages, Adjusted ('000 US$)"]]
     
     # If there was no data, just construct a dataframe containing 0s
     if df.empty:
         yearly_data = pd.DataFrame({"Total Deaths": [0], "No Injured": [0], "No Affected": [0], "No Homeless": [
-                                   0], "Total Damages ('000 US$)": [0], "Reconstruction Costs ('000 US$)": [0], "Insured Damages ('000 US$)": [0]})
+                                   0], "Total Damages, Adjusted ('000 US$)": [0], "Reconstruction Costs, Adjusted ('000 US$)": [0], "Insured Damages, Adjusted ('000 US$)": [0]})
         
     # Mapping between dataframe column names and names used in the front-end
     column_mapping = {
@@ -62,9 +62,9 @@ def generate_aggregated_data_table(df):
         "No Injured": "Injured",
         "No Affected": "Affected",
         "No Homeless": "Homeless",
-        "Total Damages ('000 US$)": "Damages ('000 US$)",
-        "Reconstruction Costs ('000 US$)": "Reconstruction Costs ('000 US$)",
-        "Insured Damages ('000 US$)": "Insured ('000 US$)"
+        "Total Damages, Adjusted ('000 US$)": "Damages ('000 US$)",
+        "Reconstruction Costs, Adjusted ('000 US$)": "Reconstruction Costs ('000 US$)",
+        "Insured Damages, Adjusted ('000 US$)": "Insured ('000 US$)"
     }
 
     # Construct table
@@ -196,17 +196,17 @@ def create_event_accordion_item(event):
         homeless = "Unknown"
 
     if not pd.isnull(event["Reconstruction Costs ('000 US$)"]):
-        reconstruction =  util.format_large_number(event["Reconstruction Costs ('000 US$)"])
+        reconstruction =  util.format_large_number(event["Reconstruction Costs, Adjusted ('000 US$)"])
     else:
         reconstruction = "Unknown"
 
     if not pd.isnull(event["Insured Damages ('000 US$)"]):
-        insured =  util.format_large_number(event["Insured Damages ('000 US$)"])
+        insured =  util.format_large_number(event["Insured Damages, Adjusted ('000 US$)"])
     else:
         insured = "Unknown"
 
     if not pd.isnull(event["Total Damages ('000 US$)"]):
-        damages =  util.format_large_number(event["Total Damages ('000 US$)"])
+        damages =  util.format_large_number(event["Total Damages, Adjusted ('000 US$)"])
     else:
         damages = "Unknown"
 
