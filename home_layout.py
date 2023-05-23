@@ -22,12 +22,16 @@ show_events_button = dbc.Button(
     "Show all events", color="primary", className="me-1 show-events", id="world-show-events")
 
 classes = [0, 0.5, 1, 5, 10, 50, 100]
-colorscale = ['#ffffb2', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
+colorscale = ['#ffffb2', '#fed976', '#feb24c',
+              '#fd8d3c', '#fc4e2a', '#e31a1c', '#b10026']
 style = dict(weight=2, opacity=1, color='black', dashArray='', fillOpacity=0.7)
-ctg = ["{}+".format(cls, classes[i + 1]) for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
-colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale, width=200, height=20, position="bottomright", className="colorbar")
+ctg = ["{}+".format(cls, classes[i + 1])
+       for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
+colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale,
+                                    width=200, height=20, position="bottomright", className="colorbar")
 
-country_info = html.Div(id="info_countries", className="map-info", style={"position": "absolute", "top": "10px", "left": "10px", "zIndex": "1000"})
+country_info = html.Div(id="info_countries", className="map-info", style={
+                        "position": "absolute", "top": "10px", "left": "10px", "zIndex": "1000"})
 
 world_slider = dcc.Slider(min=1960,
                           max=2023,
@@ -76,28 +80,32 @@ map_legend = html.Div(children=[
         dbc.Col(children=[
             html.Div(
                 children=[
-                    geophysical_icon, html.P("Geophysical", className="legend-item-text")
+                    geophysical_icon, html.P(
+                        "Geophysical", className="legend-item-text")
                 ], className="legend-item"
             )
         ], width=3),
         dbc.Col(children=[
             html.Div(
                 children=[
-                    meteorological_icon, html.P("Meteorological", className="legend-item-text")
+                    meteorological_icon, html.P(
+                        "Meteorological", className="legend-item-text")
                 ], className="legend-item"
             )
         ], width=3),
         dbc.Col(children=[
             html.Div(
                 children=[
-                    hydrological_icon, html.P("Hydrological", className="legend-item-text")
+                    hydrological_icon, html.P(
+                        "Hydrological", className="legend-item-text")
                 ], className="legend-item"
             )
         ], width=3),
         dbc.Col(children=[
             html.Div(
                 children=[
-                    climatological_icon, html.P("Climatological", className="legend-item-text")
+                    climatological_icon, html.P(
+                        "Climatological", className="legend-item-text")
                 ], className="legend-item"
             )
         ], width=3)
@@ -118,24 +126,25 @@ map = dl.Map(
         dl.TileLayer(),
         # https://datahub.io/core/geo-countries#resource-countries
         dl.GeoJSON(
-                    data=util.get_world_geojson(),
-                    id="countries",
-                    # Invisible polygons,
-                    options=dict(style = ns('draw_countries')),
-                    hideout=dict(colorscale=colorscale,classes=classes,style=style,current_year=1960,ratio_map=util.generate_countries_colours()),
-                    hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))),
+            data=util.get_world_geojson(),
+            id="countries",
+            # Invisible polygons,
+            options=dict(style=ns('draw_countries')),
+            hideout=dict(colorscale=colorscale, classes=classes, style=style,
+                         current_year=1960, ratio_map=util.generate_countries_colours()),
+            hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))),
         colorbar,
         country_info,
         dl.LayersControl(
-                [dl.Overlay(dl.GeoJSON(data={},
-                   id="events",
-                   options=dict(pointToLayer=ns("draw_marker"))), name="Events", checked=True)]
+            [dl.Overlay(dl.GeoJSON(data={},
+                                   id="events",
+                                   options=dict(pointToLayer=ns("draw_marker"))), name="Events", checked=True)]
         ),
         dl.GestureHandling(),
         world_slider_wrapper,
         html.Div(id="log")
     ],
-    )
+)
 
 world_gdp_graph = dcc.Graph(
     id="world-gdp-graph", style={"height": "30vh", "width": "100%", "marginTop": "5px"})
@@ -153,7 +162,7 @@ home_layout = html.Div(
                                 dbc.CardHeader(
                                     children=[
                                         "World Map"
-                                        
+
                                     ]
                                 ),
                                 dbc.CardBody(
@@ -168,7 +177,8 @@ home_layout = html.Div(
                                             children=[
                                                 map
                                             ],
-                                            style={"height": "90%", "marginRight": "0", "marginLeft": "0"}
+                                            style={
+                                                "height": "90%", "marginRight": "0", "marginLeft": "0"}
                                         )
                                     ]
                                 )
@@ -265,20 +275,20 @@ home_layout = html.Div(
                     className="column affected-column")
             ],
             className="graphs-row"),
-            html.Div(
+        html.Div(
+            children=[
+                dbc.Offcanvas(
                     children=[
-                        dbc.Offcanvas(
-                            children=[
-                                dbc.Accordion(
-                                    id="world-events-accordion"
-                                )
-                            ],
-                            is_open=False,
-                            placement="end",
-                            id="world-offcanvas"
+                        dbc.Accordion(
+                            id="world-events-accordion"
                         )
-                    ]
+                    ],
+                    is_open=False,
+                    placement="end",
+                    id="world-offcanvas"
                 )
+            ]
+        )
     ],
     id="home"
 )
