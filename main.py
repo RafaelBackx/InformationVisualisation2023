@@ -1,24 +1,18 @@
-from dash import Dash, html, Input, Output, dcc, State, ALL, dash
-from dash_extensions.javascript import arrow_function, assign, Namespace
-from dash.exceptions import PreventUpdate
-from dash_iconify import DashIconify
+from dash import Dash, html, Input, Output, dcc, State
+from dash_extensions.javascript import arrow_function, Namespace
 import dash_leaflet as dl
-import dash_bootstrap_components as dbc
 import math
 import pandas as pd
-import plotly.express as px
 import util
 from converter import abbrev_to_us_state
 import colorsys
 import locale
+import data
 
 locale.setlocale(locale.LC_ALL, '')
 
 
 ns = Namespace("dashExtensions", "default")
-
-df_properties = pd.read_json('./Data/preprocessed-fema-properties.json')
-df_projects = pd.read_json('./Data/preprocessed-fema-projects.json')
 
 app = Dash(__name__)
 
@@ -78,17 +72,17 @@ def generate_aggregated_data(df_states: pd.DataFrame, df_disasters, year, state=
 
 
 @app.callback([Output('countries', 'hideout'), Output('aggregated-data', 'children')], Input('slider','value'), State('countries', 'data'))
-def slider_callback(value, data):
+def slider_callback(value, country_data):
 
     df_disasters = pd.read_csv('./Data/Preprocessed-Natural-Disasters.csv', delimiter=';')
     df_disasters_us = df_disasters[df_disasters['ISO'] == 'USA']
     # df_disasters_us = util.filter_map_events(df_disasters_us, {'Disaster Subgroup': 'Hydrological'})
     df_disasters_us_states = df_disasters_us.groupby(['Start Year', 'us state'], as_index=False).sum(numeric_only=True)
 
-    total_costs = df_properties[df_properties['programFy'] == value].sum(numeric_only=True)['actualAmountPaid']
+    total_costs = data.df_properties[data.df_properties['programFy'] == value].sum(numeric_only=True)['actualAmountPaid']
 
     # states = df_properties[df_properties['programArea'] == 'FMA']
-    states = df_properties.groupby(['programFy', 'state'], as_index=False).sum(numeric_only=True)
+    states = data.df_properties.groupby(['programFy', 'state'], as_index=False).sum(numeric_only=True)
 
     spent = states[states['programFy'] == value]
     costs = df_disasters_us_states[df_disasters_us_states['Start Year'] <= value]
@@ -96,12 +90,12 @@ def slider_callback(value, data):
     # spent = spent[spent['programArea'] == 'FMA'] # get all data about flood prevention
     # costs = costs[costs['Disaster Subgroup'] == 'Hydrological'] # get all hydrological events
 
-    features = data['features']
+    features = country_data['features']
     state_iso_original = [feature['properties']['ISO_1'] for feature in features]
     state_iso = [name.split('-')[1] for name in state_iso_original]
     state_names = [abbrev_to_us_state[abbrev] for abbrev in state_iso]
 
-    children = generate_aggregated_data(df_properties, df_disasters, value)
+    children = generate_aggregated_data(data.df_properties, df_disasters, value)
     state_map = {}
     for idx,state in enumerate(state_names):
         id = state_iso_original[idx]
@@ -137,7 +131,7 @@ def on_state_click(n_clicks, state, value):
     iso = state_iso.split('-')[1]
     state_name = abbrev_to_us_state[iso]
 
-    state_data = df_properties[(df_properties['programFy'] == value) & (df_properties['state'] == state_name)]
+    state_data = data.df_properties[(data.df_properties['programFy'] == value) & (data.df_properties['state'] == state_name)]
     total_spent = state_data.sum(numeric_only=True)['actualAmountPaid']
 
     grouped_state_data = state_data.groupby(['programArea'], as_index=False).sum(numeric_only=True)

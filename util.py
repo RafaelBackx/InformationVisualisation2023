@@ -6,21 +6,21 @@ from geopy.geocoders import Nominatim
 import zipcodes
 from converter import abbrev_to_us_state, us_state_to_abbrev, fema_action_to_disaster
 import matplotlib as mpl
+import data
 
 geolocator = Nominatim(user_agent='geoapiExercises')
-gdp_disaster_data = pd.read_csv("Data/gdp_data.csv")
 
 def generate_countries_colours():
-    years = list(range(1960,2023))
+    years = list(range(1960,2024))
     colour_map = {}
     for year in years:
-        df = gdp_disaster_data[gdp_disaster_data['Start Year'] == year].groupby('ISO').sum(numeric_only=True)
+        df = data.df_gdp[data.df_gdp['Start Year'] == year].groupby('ISO').sum(numeric_only=True)
         country_names = df.index
         colour_countries = {}
         for country_name in country_names:
             value = df.loc[country_name, "share"]
             colour_countries[country_name] = value
-        colour_map[year] = colour_countries        
+        colour_map[year] = colour_countries       
     return colour_map
 
 def filter_events(df, filters, location_important = False):
