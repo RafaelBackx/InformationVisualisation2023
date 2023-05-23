@@ -10,9 +10,9 @@ import util
 import components
 import callbacks
 
-
 import us_layout
 import home_layout
+import data
 
 # Colormap for graphs
 EVENT_COLOURS = {
@@ -32,12 +32,6 @@ DISASTER_SUBGROUPS = [
 ns = Namespace("dashExtensions", "default")
 
 current_state = None
-disaster_data = pd.read_csv("Data/Preprocessed-Natural-Disasters.csv", delimiter=";")
-gdp_data = pd.read_csv('./Data/gdp_data.csv')
-df_properties = pd.read_json('./Data/preprocessed-fema-properties.json')
-df_projects = pd.read_json('./Data/preprocessed-fema-projects.json')
-
-
 
 # fig = px.scatter(
 #     data_frame=disaster_data,
@@ -148,7 +142,7 @@ def update_slider(_n_clicks, current_slider_value, max, min):
                State('world-gdp-tabs', 'active_tab'),
                State('countries', 'hideout')])
 def worldwide_slider_change(current_year, affected_filter, gdp_filter, old_hideout):
-    return callbacks.slider_change(disaster_data, gdp_data, current_year, affected_filter, gdp_filter, old_hideout=old_hideout)
+    return callbacks.slider_change(data.df_disasters, data.df_gdp, current_year, affected_filter, gdp_filter, old_hideout=old_hideout)
 
 # Callback to handle switching preferences for the gdp graph on the main page
 @app.callback(Output('world-gdp-graph', 'figure', allow_duplicate=True),
@@ -156,7 +150,7 @@ def worldwide_slider_change(current_year, affected_filter, gdp_filter, old_hideo
               State('world-year-slider', 'value'),
               prevent_initial_call=True)
 def worldwide_gdp_switch(active_tab, current_year):
-    return callbacks.changed_gdp_filter(gdp_data, current_year, None, active_tab != 'general')
+    return callbacks.changed_gdp_filter(data.df_gdp, current_year, None, active_tab != 'general')
 
 # Callback to handle switching preferences for the affected graph on the mmain page
 @app.callback(Output('world-affected-graph', 'figure', allow_duplicate=True),
@@ -164,7 +158,7 @@ def worldwide_gdp_switch(active_tab, current_year):
               State('world-year-slider', 'value'),
               prevent_initial_call=True)
 def worldwide_affected_switch(active_tab, current_year):
-    return callbacks.changed_affected_filter(disaster_data, current_year, active_tab)
+    return callbacks.changed_affected_filter(data.df_disasters, current_year, active_tab)
 
 # Callback to show the overlay with all the events for the world
 @app.callback(Output("world-events-accordion", "children"), 
@@ -177,13 +171,13 @@ def world_show_events(n_clicks, io, current_year):
         is_open = not io
     else:
         is_open = io
-    return callbacks.show_events_button_clicked(disaster_data, current_year), is_open
+    return callbacks.show_events_button_clicked(data.df_disasters, current_year), is_open
 
 # Callback to toggle the popup
 @app.callback(Output("popup", "children"), [Input('countries', 'n_clicks')], [State("countries", "click_feature"), State("world-year-slider", "value")], prevent_initial_call=True)
 def country_click(_n_clicks, feature, current_year):
     if feature is not None:
-        return components.generate_country_popup(disaster_data, feature, current_year)
+        return components.generate_country_popup(data.df_disasters, feature, current_year)
 
 # Callback to animate the slider on the popup
 @app.callback(Output('country-animation-interval', 'disabled'),
@@ -218,7 +212,7 @@ def update_country_slider(_n_clicks, current_slider_value, max, min):
                State("countries", "click_feature")])
 def country_slider_change(current_year, affected_filter, gdp_filter, country):
     country_code = country["properties"]["ISO_A3"]
-    return callbacks.slider_change(disaster_data, gdp_data, current_year, affected_filter, gdp_filter, country_code=country_code)
+    return callbacks.slider_change(data.df_disasters, data.df_gdp, current_year, affected_filter, gdp_filter, country_code=country_code)
 
 # Callback to handle switching preferences for the gdp graph on the popup
 @app.callback(Output('country-gdp-graph', 'figure', allow_duplicate=True),
@@ -228,7 +222,7 @@ def country_slider_change(current_year, affected_filter, gdp_filter, country):
               prevent_initial_call=True)
 def country_gdp_switch(active_tab, current_year, country):
     country_code = country["properties"]["ISO_A3"]
-    return callbacks.changed_gdp_filter(gdp_data, current_year, country_code, active_tab != 'general')
+    return callbacks.changed_gdp_filter(data.df_gdp, current_year, country_code, active_tab != 'general')
 
 # Callback to handle switching preferences for the affected graph on the popup
 @app.callback(Output('country-affected-graph', 'figure', allow_duplicate=True),
@@ -238,7 +232,7 @@ def country_gdp_switch(active_tab, current_year, country):
               prevent_initial_call=True)
 def country_affected_switch(active_tab, current_year, country):
     country_code = country["properties"]["ISO_A3"]
-    return callbacks.changed_affected_filter(disaster_data, current_year, active_tab, country_code)
+    return callbacks.changed_affected_filter(data.df_disasters, current_year, active_tab, country_code)
 
 # Callback to show the overlay with all the events for a specific country
 @app.callback(Output("country-events-accordion", "children"), 
@@ -253,7 +247,7 @@ def country_show_events(n_clicks, io, current_year, country):
     else:
         is_open = io
     country_code = country["properties"]["ISO_A3"]
-    return callbacks.show_events_button_clicked(disaster_data, current_year, country_code), is_open
+    return callbacks.show_events_button_clicked(data.df_disasters, current_year, country_code), is_open
 
 @app.callback(Output('usa-states-1', 'hideout'),
               Input('usa-states-1', 'click_feature'), 
@@ -288,20 +282,20 @@ def update_usa_states_aggregated_data_on_click(_n_clicks,state_info,hideout):
         current_feature = None
         hideout['active_state'] = ''
 
-    disaster_bar_plot, fema_bar_plot, dis_header, fema_header = callbacks.create_cost_distributions_for_state(state_name,df_properties,disaster_data)
+    disaster_bar_plot, fema_bar_plot, dis_header, fema_header = callbacks.create_cost_distributions_for_state(state_name,data.df_properties,data.df_disasters)
     return disaster_bar_plot, dis_header, fema_bar_plot, fema_header, current_feature, hideout
 
 @app.callback(Output("info", "children"), [Input("usa-states-1", "hover_feature")])
 def info_hover(feature):
-    return callbacks.state_hover(feature, df_properties)
+    return callbacks.state_hover(feature, data.df_properties)
 
 @app.callback(Output("damages_info", "children"), [Input("usa-states-2", "hover_feature")])
 def info_hover(feature):
-    return callbacks.state_hover_damages(feature, us_layout.df_disasters)
+    return callbacks.state_hover_damages(feature, data.df_disasters)
 
 @app.callback(Output("info_countries", "children", allow_duplicate=True), [Input("countries", "hover_feature")], State('world-year-slider', 'value'))
 def info_map(feature, current_year):
-    return callbacks.country_hover(feature, current_year, gdp_data)
+    return callbacks.country_hover(feature, current_year, data.df_gdp)
 
 @app.callback(Output("log", "children"), [Input("map", "bounds")])
 def log(bounds):

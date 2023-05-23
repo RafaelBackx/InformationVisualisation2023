@@ -4,7 +4,7 @@ import dash_leaflet.express as dlx
 import dash_bootstrap_components as dbc
 from dash import html, dcc
 from dash_extensions.javascript import arrow_function, Namespace
-
+import data
 import util
 
 import converter as converter
@@ -12,11 +12,7 @@ import components
 
 ns = Namespace('dashExtensions', 'default')
 
-df_properties = pd.read_json('./Data/preprocessed-fema-properties.json')
-df_projects = pd.read_json('./Data/preprocessed-fema-projects.json')
-df_disasters = pd.read_csv('./Data/Preprocessed-Natural-Disasters.csv', delimiter=';')
-
-death_graph = dcc.Graph(id='death_graph', figure=components.generate_average_death_comparison_bar_plot(df_disasters))
+death_graph = dcc.Graph(id='death_graph', figure=components.generate_average_death_comparison_bar_plot(data.df_disasters))
 
 usa_states_data = util.get_country_data('USA')
 
@@ -43,7 +39,7 @@ map1 = dl.Map(
         dl.GeoJSON(
             data=usa_states_data,
             id="usa-states-1",
-            hideout=dict(colorscale=colorscale,classes=classes,style=style,active_state='',ratio_map=util.generate_states_spent_ratio(usa_states_data,df_properties)),
+            hideout=dict(colorscale=colorscale,classes=classes,style=style,active_state='',ratio_map=util.generate_states_spent_ratio(usa_states_data,data.df_properties)),
             # Invisible polygons,
             options=dict(style = ns('draw_polygon')),
             zoomToBounds=True,
@@ -68,7 +64,7 @@ map2 = dl.Map(
         dl.GeoJSON(
             data=usa_states_data,
             id="usa-states-2",
-            hideout=dict(colorscale=colorscale,classes=classes,style=style,active_state='',ratio_map=util.generate_states_damages_ratio(usa_states_data,df_disasters)),
+            hideout=dict(colorscale=colorscale,classes=classes,style=style,active_state='',ratio_map=util.generate_states_damages_ratio(usa_states_data,data.df_disasters)),
             # Invisible polygons,
             options=dict(style = ns('draw_polygon')),
             zoomToBounds=True,
