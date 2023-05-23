@@ -28,7 +28,7 @@ style = dict(weight=2, opacity=1, color='black', dashArray='', fillOpacity=0.7)
 ctg = ["{}+".format(cls, classes[i + 1])
        for i, cls in enumerate(classes[:-1])] + ["{}+".format(classes[-1])]
 colorbar = dlx.categorical_colorbar(categories=ctg, colorscale=colorscale,
-                                    width=200, height=20, position="bottomright", className="colorbar")
+                                    width=200, height=20, position="topright", className="colorbar")
 
 country_info = html.Div(id="info_countries", className="map-info", style={
                         "position": "absolute", "top": "10px", "left": "10px", "zIndex": "1000"})
