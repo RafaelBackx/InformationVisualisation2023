@@ -227,9 +227,9 @@ home_layout = html.Div(
                                         dbc.Tabs(
                                             children=[
                                                 dbc.Tab(
-                                                    label="General", tab_id="general"),
+                                                    label="Total", tab_id="general"),
                                                 dbc.Tab(
-                                                    label="Specific", tab_id="specific"),
+                                                    label="Disaster Subgroups", tab_id="specific"),
                                             ],
                                             id="world-gdp-tabs",
                                             active_tab="general"

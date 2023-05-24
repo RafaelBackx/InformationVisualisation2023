@@ -374,7 +374,7 @@ def generate_country_popup(disaster_data, country, current_year):
                 data=util.get_country_data(country_iso),
                 id="country",
                 # Invisible polygons,
-                options={"style": {"color": "#123456"}},
+                options={"style": {"color": "#123456", "weight": "2"}},
                 zoomToBounds=True,
                 hoverStyle=arrow_function(dict(weight=3, color='#666', dashArray=''))),  # Gray border on hover (line_thickness, color, line_style)
             dl.GeoJSON(data=util.convert_events_to_geojson(map_data),  # Only show events of country
@@ -471,8 +471,8 @@ def generate_country_popup(disaster_data, country, current_year):
                                                 children=[
                                                     dbc.Tabs(id='country-gdp-tabs', 
                                                         children=[
-                                                            dbc.Tab(label="General",id='gdp-general',tab_id="general"),
-                                                            dbc.Tab(label="Specific",id='gdp-specific',tab_id="specific")
+                                                            dbc.Tab(label="Total",id='gdp-general',tab_id="general"),
+                                                            dbc.Tab(label="Disaster Subgroups",id='gdp-specific',tab_id="specific")
                                                         ], active_tab="general"),
                                                         gdp_graph
                                                 ],

@@ -167,6 +167,13 @@
     overflow-y: scroll !important;
 }
 
+.btn-close {
+    border-width: 2px !important;
+    border-style: outset !important;
+    border-color: #7E7E7E !important;
+    border-image: initial !important;
+}
+
 ::-webkit-scrollbar {
     width: 12px;
 }
